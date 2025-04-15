@@ -3,5 +3,7 @@
     <style name="Base.Theme.Nhom1_QuanLyChiTieu" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorAccent">#FFA500</item> <!-- Cam -->
+
     </style>
 </resources>

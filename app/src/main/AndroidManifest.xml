@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Nhom1_QuanLyChiTieu"
         tools:targetApi="31">
+        
         <activity
             android:name=".MainActivity"
             android:exported="true">
