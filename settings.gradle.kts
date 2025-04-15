@@ -19,5 +19,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Nhom1_QuanLyChiTieu2"
 include(":app")
