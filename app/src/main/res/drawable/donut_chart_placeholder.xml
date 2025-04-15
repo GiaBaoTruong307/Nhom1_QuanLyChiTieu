@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Vòng tròn nền -->
+    <path
+        android:fillColor="#121621"
+        android:pathData="M100,100m-80,0a80,80 0,1 1,160 0a80,80 0,1 1,-160 0"/>
+
+    <!-- Phần cam (47%) -->
+    <path
+        android:fillColor="#FFC278"
+        android:pathData="M100,100 L100,20 A80,80 0,0 1,169.3,130.7 L100,100 Z"/>
+
+    <!-- Phần xanh dương (40%) -->
+    <path
+        android:fillColor="#4ECCE6"
+        android:pathData="M100,100 L169.3,130.7 A80,80 0,0 1,30.7,130.7 L100,100 Z"/>
+
+    <!-- Phần tím (23%) -->
+    <path
+        android:fillColor="#B39DDB"
+        android:pathData="M100,100 L30.7,130.7 A80,80 0,0 1,30.7,69.3 L100,100 Z"/>
+
+    <!-- Phần hồng (20%) -->
+    <path
+        android:fillColor="#F48FB1"
+        android:pathData="M100,100 L30.7,69.3 A80,80 0,0 1,100,20 L100,100 Z"/>
+
+    <!-- Lỗ trung tâm -->
+    <path
+        android:fillColor="#121621"
+        android:pathData="M100,100m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0"/>
+</vector>
