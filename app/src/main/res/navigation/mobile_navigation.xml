@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/thongke">
+
+    <fragment
+        android:id="@+id/thongke"
+        android:name="com.example.nhom1_quanlychitieu2.ui.ThongKe.Thongke"
+        android:label="Thống Kê"
+        tools:layout="@layout/fragment_thongke" />
+
+    <fragment
+        android:id="@+id/lapkehoach"
+        android:name="com.example.nhom1_quanlychitieu2.ui.LapKeHoach.LapKeHoach"
+        android:label="Lập Kế Hoạch"
+        tools:layout="@layout/fragment_lapkehoach" />
+
+    <fragment
+        android:id="@+id/daucong"
+        android:name="com.example.nhom1_quanlychitieu2.ui.DauCong.DauCong"
+        android:label=""
+        tools:layout="@layout/fragment_daucong" />
+
+    <fragment
+        android:id="@+id/baocao"
+        android:name="com.example.nhom1_quanlychitieu2.ui.BaoCao.BaoCao"
+        android:label="Báo Cáo"
+        tools:layout="@layout/fragment_baocao" />
+
+    <fragment
+        android:id="@+id/vitien"
+        android:name="com.example.nhom1_quanlychitieu2.ui.ViTien.ViTien"
+        android:label="Ví Tiền"
+        tools:layout="@layout/fragment_vitien" />
+</navigation>
