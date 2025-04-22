@@ -1,4 +1,4 @@
-package com.example.nhom1_quanlychitieu2;
+package com.example.nhom1_quanlychitieu;
 
 import org.junit.Test;
 

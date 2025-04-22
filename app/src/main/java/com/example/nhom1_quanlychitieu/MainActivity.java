@@ -1,4 +1,4 @@
-package com.example.nhom1_quanlychitieu2;
+package com.example.nhom1_quanlychitieu;
 
 import android.os.Bundle;
 
@@ -10,7 +10,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.example.nhom1_quanlychitieu2.databinding.ActivityMainBinding;
+import com.example.nhom1_quanlychitieu.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 

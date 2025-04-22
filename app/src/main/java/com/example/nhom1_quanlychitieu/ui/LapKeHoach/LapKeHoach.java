@@ -1,4 +1,4 @@
-package com.example.nhom1_quanlychitieu2.ui.LapKeHoach;
+package com.example.nhom1_quanlychitieu.ui.LapKeHoach;
 
 import android.os.Bundle;
 
@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.nhom1_quanlychitieu2.R;
+import com.example.nhom1_quanlychitieu.R;
 
 /**
  * A simple {@link Fragment} subclass.
