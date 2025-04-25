@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/thongke"
-        android:name="com.example.nhom1_quanlychitieu.ui.ThongKe.Thongke"
+        android:name="com.example.nhom1_quanlychitieu.ui.ThongKe.ThongKe"
         android:label="Thống Kê"
         tools:layout="@layout/fragment_thongke" />
 

@@ -12,16 +12,50 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Nhom1_QuanLyChiTieu2"
         tools:targetApi="31">
+
+        <!-- Thay đổi MainActivity không còn là launcher activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="Nhom1_QuanLyChiTieu">
+            android:exported="false"
+            android:label="Nhom1_QuanLyChiTieu" />
+
+        <!-- Thêm LoginActivity làm launcher activity -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Thêm các activity mới -->
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".OtpVerificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ResetPasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SuccessActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
+
+
+<!--Những thay đổi chính:-->
+<!--1. Chuyển MainActivity từ launcher activity (exported="true") thành activity thông thường (exported="false")-->
+<!--2. Thêm LoginActivity làm launcher activity mới với intent-filter cho MAIN và LAUNCHER-->
+<!--3. Thêm tất cả các activity mới (RegisterActivity, ForgotPasswordActivity, OtpVerificationActivity, ResetPasswordActivity, -->
+<!--    SuccessActivity) với exported="false" (không thể khởi chạy trực tiếp từ bên ngoài ứng dụng)-->
