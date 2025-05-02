@@ -43,4 +43,6 @@
     <string name="register_success">Đăng ký thành công</string>
     <string name="please_enter_phone">Vui lòng nhập số điện thoại</string>
     <string name="please_enter_otp">Vui lòng nhập đầy đủ mã OTP</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
