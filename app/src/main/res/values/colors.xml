@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+<<<<<<< HEAD
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -7,4 +8,44 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+=======
+    <!-- Main theme colors -->
+    <color name="colorPrimary">#1A1A2E</color>
+    <color name="colorPrimaryDark">#121220</color>
+    <color name="colorAccent">#FF7F50</color>
+
+    <!-- Additional colors -->
+    <color name="colorBackground">#1A1A2E</color>
+    <color name="colorSurface">#232338</color>
+    <color name="colorError">#CF6679</color>
+
+    <!-- Text colors -->
+    <color name="textColorPrimary">#FFFFFF</color>
+    <color name="textColorSecondary">#B3FFFFFF</color> <!-- 70% white -->
+    <color name="textColorHint">#80FFFFFF</color> <!-- 50% white -->
+
+    <!-- Input field colors -->
+    <color name="inputBackground">#DDDDDD</color>
+    <color name="inputText">#333333</color>
+
+    <!-- Button colors -->
+    <color name="buttonPrimary">#FF7F50</color>
+    <color name="buttonPrimaryPressed">#E56E45</color>
+    <color name="buttonText">#FFFFFF</color>
+
+    <!-- Success colors -->
+    <color name="successGreen">#4CAF50</color>
+    <color name="successBackground">#1B5E20</color>
+
+    <!-- Common colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray">#888888</color>
+    <color name="lightGray">#DDDDDD</color>
+    <color name="transparent">#00000000</color>
+    <color name="my_light_primary">#6200EE</color> <!-- Example primary color -->
+    <color name="my_light_primary_variant">#3700B3</color> <!-- Darker variant -->
+    <color name="my_light_secondary">#03DAC6</color> <!-- Example secondary color -->
+
+>>>>>>> 62be6c4 (hi)
 </resources>
