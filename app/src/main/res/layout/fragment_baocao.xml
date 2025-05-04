@@ -1,9 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.BaoCao.BaoCao">
+    android:background="#121418"
+    tools:context=".MainActivity">
 
+    <!-- Back Button -->
+    <ImageButton
+        android:scaleType="centerCrop"
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        android:src="@drawable/ic_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@android:color/white" />
 
-</FrameLayout>
+    <!-- Tab Layout -->
+    <LinearLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Chi tiêu Tab -->
+        <TextView
+            android:id="@+id/tabExpense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingVertical="16dp"
+            android:text="Chi tiêu"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+        <!-- Thu nhập Tab -->
+        <TextView
+            android:id="@+id/tabIncome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingVertical="16dp"
+            android:text="Thu nhập"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <!-- Tab Indicators -->
+    <View
+        android:id="@+id/indicatorExpense"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@android:color/white"
+        app:layout_constraintEnd_toEndOf="@id/tabExpense"
+        app:layout_constraintStart_toStartOf="@id/tabExpense"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout" />
+
+    <View
+        android:id="@+id/indicatorIncome"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@android:color/white"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="@id/tabIncome"
+        app:layout_constraintStart_toStartOf="@id/tabIncome"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout" />
+
+    <!-- Fragment Container -->
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/indicatorExpense" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
