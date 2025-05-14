@@ -5,33 +5,39 @@
     android:id="@+id/mobile_navigation"
     app:startDestination="@+id/thongke">
 
+    <!-- Fragment Thống Kê - Màn hình chính -->
     <fragment
         android:id="@+id/thongke"
         android:name="com.example.nhom1_quanlychitieu.ui.ThongKe.ThongKe"
         android:label="Thống Kê"
         tools:layout="@layout/fragment_thongke" />
 
+    <!-- Fragment Lập Kế Hoạch -->
     <fragment
         android:id="@+id/lapkehoach"
         android:name="com.example.nhom1_quanlychitieu.ui.LapKeHoach.LapKeHoach"
         android:label="Lập Kế Hoạch"
         tools:layout="@layout/fragment_lapkehoach" />
 
+    <!-- Fragment Dấu Cộng (Thêm mới) -->
     <fragment
         android:id="@+id/daucong"
         android:name="com.example.nhom1_quanlychitieu.ui.DauCong.DauCong"
         android:label=""
         tools:layout="@layout/fragment_daucong" />
 
+    <!-- Fragment Báo Cáo -->
     <fragment
         android:id="@+id/baocao"
         android:name="com.example.nhom1_quanlychitieu.ui.BaoCao.BaoCao"
         android:label="Báo Cáo"
         tools:layout="@layout/fragment_baocao" />
 
+    <!-- Fragment Hồ Sơ -->
     <fragment
-        android:id="@+id/vitien"
-        android:name="com.example.nhom1_quanlychitieu.ui.ViTien.ViTien"
-        android:label="Ví Tiền"
-        tools:layout="@layout/fragment_vitien" />
+        android:id="@+id/hoso"
+        android:name="com.example.nhom1_quanlychitieu.ui.HoSo.HoSo"
+        android:label="Hồ Sơ"
+        tools:layout="@layout/fragment_hoso" />
+
 </navigation>

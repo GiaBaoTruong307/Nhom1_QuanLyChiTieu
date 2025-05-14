@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="8dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Tiêu đề -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Mục tiêu mới"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="24dp"
+                android:textColor="@android:color/black" />
+
+            <!-- Chọn mục tiêu -->
+            <EditText
+                android:id="@+id/editTextGoal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Chọn mục tiêu"
+                android:textStyle="bold"
+                android:padding="12dp"
+                android:background="@drawable/lapkehoach_edit_text_border"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Số tiền cần đạt được -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp">
+
+                <EditText
+                    android:id="@+id/editTextAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Số tiền cần đạt được"
+                    android:textStyle="bold"
+                    android:inputType="number"
+                    android:padding="12dp"
+                    android:background="@drawable/lapkehoach_edit_text_border" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VND"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:textColor="@android:color/black" />
+            </RelativeLayout>
+
+            <!-- Nút HỦY và THÊM -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end">
+
+                <Button
+                    android:id="@+id/buttonCancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HỦY"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#FF0000"
+                    android:padding="12dp"
+                    android:layout_marginEnd="20dp" />
+
+                <Button
+                    android:id="@+id/buttonAdd"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="THÊM"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#3333FF"
+                    android:padding="12dp"
+                    android:layout_marginStart="10dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</androidx.cardview.widget.CardView>

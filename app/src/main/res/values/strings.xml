@@ -1,46 +1,208 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Chung -->
     <string name="app_name">Quản Lý Chi Tiêu</string>
+    <string name="back">Quay lại</string>
+    <string name="confirm">Xác nhận</string>
 
     <!-- Đăng nhập -->
     <string name="login">Đăng nhập</string>
+    <string name="login_subtitle">Đăng nhập để sử dụng ứng dụng</string>
     <string name="phone_number">Số điện thoại</string>
     <string name="password">Mật khẩu</string>
     <string name="forgot_password">Quên mật khẩu?</string>
-    <string name="no_account">Chưa có tài khoản?</string>
-    <string name="register">Đăng ký</string>
-    <string name="phone_hint">0905xxx</string>
+    <string name="dont_have_account">Chưa có tài khoản?</string>
+    <string name="toggle_password_visibility">Hiện/ẩn mật khẩu</string>
+    <string name="login_success">Đăng nhập thành công</string>
+    <string name="login_success_subtitle">Bạn đã đăng nhập thành công vào ứng dụng</string>
 
     <!-- Đăng ký -->
+    <string name="register">Đăng ký</string>
+    <string name="register_subtitle">Tạo tài khoản mới để sử dụng ứng dụng</string>
     <string name="confirm_password">Xác nhận mật khẩu</string>
-    <string name="have_account">Đã có tài khoản?</string>
-
-    <!-- Quên mật khẩu -->
-    <string name="forgot_password_title">Quên mật khẩu - lấy mã OTP</string>
-    <string name="forgot_password_label">Quên mật khẩu</string>
-    <string name="enter_phone">Nhập số điện thoại</string>
-    <string name="get_otp">Lấy mã OTP</string>
+    <string name="already_have_account">Đã có tài khoản?</string>
+    <string name="password_not_match">Mật khẩu không khớp</string>
+    <string name="please_fill_all">Vui lòng điền đầy đủ thông tin</string>
+    <string name="register_success">Đăng ký thành công</string>
+    <string name="register_success_subtitle">Bạn đã đăng ký tài khoản thành công</string>
 
     <!-- Xác thực OTP -->
-    <string name="otp_verification_title">Quên mật khẩu - nhập mã OTP</string>
+    <string name="otp_verification">Xác thực OTP</string>
+    <string name="otp_subtitle">Vui lòng nhập mã OTP đã được gửi đến số điện thoại của bạn</string>
     <string name="enter_otp">Nhập mã OTP</string>
-    <string name="verify">Xác nhận</string>
+    <string name="verify_otp">Xác thực OTP</string>
+    <string name="resend_otp">Gửi lại mã OTP</string>
 
-    <!-- Đặt lại mật khẩu -->
-    <string name="reset_password_title">Nhập mật khẩu mới</string>
-    <string name="reset_password_label">Đặt lại mật khẩu</string>
+    <!-- Quên mật khẩu -->
+    <string name="forgot_password_subtitle">Nhập số điện thoại để đặt lại mật khẩu</string>
+    <string name="reset_password">Đặt lại mật khẩu</string>
+    <string name="reset_password_subtitle">Nhập mật khẩu mới cho tài khoản của bạn</string>
     <string name="new_password">Mật khẩu mới</string>
-    <string name="confirm_new_password">Xác nhận mật khẩu mới</string>
 
-    <!-- Thành công -->
-    <string name="success_title">Đặt lại mật khẩu thành công</string>
-    <string name="success_label">THÀNH CÔNG !!!</string>
+    <!-- Register Screen -->
+    <string name="register_title">Đăng ký</string>
+    <string name="email_label">Email</string>
+    <string name="email_hint">Nhập địa chỉ email</string>
+    <string name="password_label">Mật khẩu</string>
+    <string name="password_hint">Nhập mật khẩu</string>
+    <string name="confirm_password_label">Xác nhận mật khẩu</string>
+    <string name="confirm_password_hint">Nhập lại mật khẩu</string>
+    <string name="register_button">Đăng ký</string>
+    <string name="have_account">Đã có tài khoản?</string>
+    <string name="login_link">Đăng nhập</string>
+    <string name="register_illustration_description">Hình minh họa đăng ký</string>
+    <string name="toggle_confirm_password_visibility">Hiện/ẩn xác nhận mật khẩu</string>
+
+    <!-- Success Screen -->
+    <string name="success_title">THÀNH CÔNG !!!</string>
+    <string name="registration_success_message">Đăng ký tài khoản thành công</string>
     <string name="back_to_login">Quay lại đăng nhập</string>
+    <string name="success_illustration_description">Hình minh họa thành công</string>
+    <string name="success_icon_description">Biểu tượng thành công</string>
 
-    <!-- Thông báo -->
-    <string name="please_fill_all">Vui lòng nhập đầy đủ thông tin</string>
-    <string name="password_not_match">Mật khẩu xác nhận không khớp</string>
-    <string name="register_success">Đăng ký thành công</string>
-    <string name="please_enter_phone">Vui lòng nhập số điện thoại</string>
-    <string name="please_enter_otp">Vui lòng nhập đầy đủ mã OTP</string>
+    <!-- Forgot Password Screen -->
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="forgot_password_description">Nhập email của bạn để nhận link đặt lại mật khẩu</string>
+    <string name="email_hint_forgot_password">Nhập địa chỉ email của bạn</string>
+    <string name="send_reset_link_button">Gửi link đặt lại mật khẩu</string>
+    <string name="back_button_description">Quay lại</string>
+    <string name="forgot_password_illustration_description">Hình minh họa quên mật khẩu</string>
+
+    <!-- Forgot Password Success Screen -->
+    <string name="forgot_password_success_title">THÀNH CÔNG !!!</string>
+    <string name="forgot_password_success_message">Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn.</string>
+    <string name="open_email_app">Mở ứng dụng Email</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Đăng nhập</string>
+    <string name="login_button">Đăng nhập</string>
+    <string name="forgot_password_link">Quên mật khẩu?</string>
+    <string name="no_account">Chưa có tài khoản?</string>
+    <string name="register_link">Đăng ký</string>
+
+    <string name="login_illustration_description">Hình minh họa đăng nhập</string>
+
+    <!-- Login Success Dialog -->
+    <string name="login_success_title">ĐĂNG NHẬP THÀNH CÔNG</string>
+    <string name="login_success_message">Chào mừng bạn đã quay trở lại ứng dụng Quản lý Chi tiêu!</string>
+    <string name="confirm_button">Xác nhận</string>
+
+    <!-- Màn hình xác thực mã -->
+    <string name="verify_code_title">Xác thực mã</string>
+    <string name="verify_code_description">Vui lòng nhập mã xác thực đã được gửi đến email của bạn</string>
+    <string name="verification_code_hint">Nhập mã xác thực</string>
+    <string name="verify_code_button">Xác thực</string>
+    <string name="resend_code">Gửi lại mã</string>
+    <string name="verification_illustration_description">Hình minh họa xác thực</string>
+
+    <!-- Màn hình đặt lại mật khẩu -->
+    <string name="reset_password_title">Đặt lại mật khẩu</string>
+    <string name="reset_password_description">Vui lòng nhập mật khẩu mới của bạn</string>
+    <string name="new_password_hint">Mật khẩu mới</string>
+    <string name="confirm_new_password_hint">Xác nhận mật khẩu mới</string>
+    <string name="reset_password_button">Đặt lại mật khẩu</string>
+    <string name="reset_password_illustration_description">Hình minh họa đặt lại mật khẩu</string>
+
+    <!-- Strings mới cho module Ví Tiền -->
+
+    <string name="add_new_account">Thêm tài khoản mới</string>
+    <string name="bank_account">Tiền tài khoản</string>
+    <string name="cash">Tiền mặt</string>
+    <string name="next">Tiếp theo</string>
+    <string name="account_name">Tên tài khoản</string>
+    <string name="cash_name">Tên loại tiền mặt</string>
+    <string name="balance">Thăng bằng</string>
+    <string name="icon">Biểu tượng</string>
+    <string name="select_icon">Chọn biểu tượng</string>
+    <string name="delete_account">Xóa tài khoản</string>
+    <string name="account_icon">Biểu tượng tài khoản</string>
+    <string name="bank_account_icon">Biểu tượng tài khoản ngân hàng</string>
+    <string name="cash_icon">Biểu tượng tiền mặt</string>
+    <string name="money_icon">Biểu tượng tiền</string>
+
+
+    <string name="greeting_with_name">Xin chào, %1$s</string>
+    <string name="no_transactions">Không có giao dịch nào</string>
+    <string name="total_amount">Tổng số tiền</string>
+    <string name="transaction_history">Lịch sử giao dịch</string>
+    <string name="add_transaction">Thêm giao dịch mới</string>
+    <string name="edit_transaction">Chỉnh sửa giao dịch</string>
+    <string name="add_category">Thêm danh mục mới</string>
+    <string name="edit_category">Chỉnh sửa danh mục</string>
+    <string name="amount">Số tiền</string>
+    <string name="category">Danh mục</string>
+    <string name="wallet">Ví</string>
+    <string name="date">Ngày</string>
+    <string name="note">Ghi chú</string>
+    <string name="cancel">Hủy</string>
+    <string name="save">Lưu</string>
+    <string name="delete">Xóa</string>
+    <string name="confirm_delete">Xác nhận xóa</string>
+    <string name="confirm_delete_message">Bạn có chắc chắn muốn xóa?</string>
+    <string name="error_loading_data">Lỗi tải dữ liệu</string>
+    <string name="please_login">Vui lòng đăng nhập</string>
+
+    <string name="manage_categories">Quản lý danh mục</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="my_account">Tài khoản của tôi</string>
+    <string name="income">Thu nhập</string>
+    <string name="expense">Chi tiêu</string>
+    <string name="total">Tổng cộng</string>
+    <string name="transaction_icon">Biểu tượng giao dịch</string>
+
+    <string name="title_thongke">Thống kê</string>
+    <string name="title_lapkehoach">Lập kế hoạch</string>
+    <string name="title_daucong">+</string>
+    <string name="title_baocao">Báo cáo</string>
+    <string name="title_vitien">Ví tiền</string>
+
+    <!-- Strings cho chức năng Ví tiền -->
+    <string name="wallet_icon">Biểu tượng ví</string>
+    <string name="edit">Chỉnh sửa</string>
+
+    <string name="category_icon">Biểu tượng danh mục</string>
+
+    <string name="username_label">Tên</string>
+    <string name="username_hint">Nhập tên của bạn</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Hồ sơ người dùng -->
+    <string name="profile_picture_description">Ảnh đại diện</string>
+    <string name="loading">Đang tải...</string>
+    <string name="personal_info">Thông tin cá nhân</string>
+    <string name="edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="edit_profile_description">Biểu tượng chỉnh sửa hồ sơ</string>
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="change_password_description">Biểu tượng đổi mật khẩu</string>
+    <string name="settings">Cài đặt</string>
+    <string name="notifications">Thông báo</string>
+    <string name="notifications_description">Biểu tượng thông báo</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="language_description">Biểu tượng ngôn ngữ</string>
+    <string name="arrow_description">Biểu tượng mũi tên</string>
+    <string name="app_version">Phiên bản 1.0.0</string>
+    <string name="app_version_format">Phiên bản %s</string>
+    <string name="logout_confirmation_title">Xác nhận đăng xuất</string>
+    <string name="logout_confirmation_message">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="no_username">Chưa có tên người dùng</string>
+    <string name="select_language">Chọn ngôn ngữ</string>
+
+    <!-- Chỉnh sửa hồ sơ -->
+
+    <string name="full_name_label">Họ và tên</string>
+    <string name="full_name_hint">Nhập họ và tên</string>
+    <string name="phone_number_label">Số điện thoại</string>
+    <string name="phone_number_hint">Nhập số điện thoại</string>
+    <string name="save_button">Lưu</string>
+
+
+    <!-- Đổi mật khẩu -->
+    <string name="current_password_label">Mật khẩu hiện tại</string>
+    <string name="current_password_hint">Nhập mật khẩu hiện tại</string>
+    <string name="new_password_label">Mật khẩu mới</string>
+    <string name="confirm_new_password_label">Xác nhận mật khẩu mới</string>
+    <string name="change_password_button">Đổi mật khẩu</string>
+
 </resources>

@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Quyền cần thiết cho Firebase -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,45 +21,73 @@
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:label="Nhom1_QuanLyChiTieu" />
+            android:label="@string/app_name" />
 
         <!-- Thêm LoginActivity làm launcher activity -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.QuanLyChungThuc.LoginActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Thêm các activity mới -->
+        <!-- Thêm theme NoActionBar cho RegisterActivity -->
         <activity
-            android:name=".RegisterActivity"
+            android:name=".ui.QuanLyChungThuc.RegisterActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
 
+        <!-- Thêm RegisterSuccessActivity -->
         <activity
-            android:name=".ForgotPasswordActivity"
+            android:name=".ui.QuanLyChungThuc.RegisterSuccessActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
 
+        <!-- Thêm theme NoActionBar cho ForgotPasswordActivity -->
         <activity
-            android:name=".OtpVerificationActivity"
+            android:name=".ui.QuanLyChungThuc.ForgotPasswordActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
 
+        <!-- Thêm theme NoActionBar cho SuccessActivity -->
         <activity
-            android:name=".ResetPasswordActivity"
+            android:name=".ui.QuanLyChungThuc.SuccessActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
 
+        <!-- Sửa theme cho ForgotPasswordSuccessActivity để nhất quán -->
         <activity
-            android:name=".SuccessActivity"
-            android:exported="false" />
+            android:name=".ui.QuanLyChungThuc.ForgotPasswordSuccessActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!-- Thêm CategoryManagementActivity -->
+        <activity
+            android:name=".ui.ThongKe.CategoryManagementActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!-- Thêm TransactionManagementActivity -->
+        <activity
+            android:name=".ui.ThongKe.TransactionManagementActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!-- Thêm EditProfileActivity -->
+        <activity
+            android:name=".ui.HoSo.EditProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!-- Thêm ChangePasswordActivity -->
+        <activity
+            android:name=".ui.HoSo.ChangePasswordActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 
 </manifest>
-
-
-<!--Những thay đổi chính:-->
-<!--1. Chuyển MainActivity từ launcher activity (exported="true") thành activity thông thường (exported="false")-->
-<!--2. Thêm LoginActivity làm launcher activity mới với intent-filter cho MAIN và LAUNCHER-->
-<!--3. Thêm tất cả các activity mới (RegisterActivity, ForgotPasswordActivity, OtpVerificationActivity, ResetPasswordActivity, -->
-<!--    SuccessActivity) với exported="false" (không thể khởi chạy trực tiếp từ bên ngoài ứng dụng)-->

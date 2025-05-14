@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Trạng thái mặc định (background của ProgressBar) -->
+    <item>
+        <layer-list>
+            <!-- Background của thanh tiến trình -->
+            <item android:id="@android:id/background">
+                <shape>
+                    <corners android:radius="4dp" />
+                    <solid android:color="#FFFFFF" /> <!-- Màu xám nhạt cho phần chưa hoàn thành -->
+                </shape>
+            </item>
+            <!-- Thanh tiến trình (phần đã hoàn thành) -->
+            <item android:id="@android:id/progress">
+                <clip>
+                    <shape>
+                        <corners android:radius="4dp" />
+                        <solid android:color="#FF4081" /> <!-- Màu hồng cho phần đã hoàn thành -->
+                    </shape>
+                </clip>
+            </item>
+        </layer-list>
+    </item>
+</selector>

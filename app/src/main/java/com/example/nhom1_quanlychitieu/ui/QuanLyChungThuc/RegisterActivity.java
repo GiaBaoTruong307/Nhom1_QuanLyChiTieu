@@ -1,68 +1,243 @@
-package com.example.nhom1_quanlychitieu;
+package com.example.nhom1_quanlychitieu.ui.QuanLyChungThuc;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.text.InputType;
+import android.util.Log;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.nhom1_quanlychitieu.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText etPhone, etPassword, etConfirmPassword;
+    private static final String TAG = "RegisterActivity";
+    private static final int MIN_PASSWORD_LENGTH = 6;
+
+    // UI components
+    private EditText etEmail, etPassword, etConfirmPassword, etUsername;
     private Button btnRegister;
-    private TextView tvLogin;
+    private TextView tvLogin, tvRegisterLabel;
+    private ImageButton btnTogglePassword, btnToggleConfirmPassword;
+    private ProgressDialog progressDialog;
+
+    // Firebase components
+    private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_register);
 
-        // Initialize views
-        etPhone = findViewById(R.id.etPhone);
+        initFirebase();
+        initViews();
+        setupListeners();
+    }
+
+    private void initFirebase() {
+        try {
+            mAuth = FirebaseAuth.getInstance();
+            mDatabase = FirebaseDatabase.getInstance().getReference();
+        } catch (Exception e) {
+            Log.e(TAG, "Firebase initialization error", e);
+            showToast("Lỗi khởi tạo Firebase: " + e.getMessage());
+            finish();
+        }
+    }
+
+    private void initViews() {
+        etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
+        etUsername = findViewById(R.id.etUsername); // Thêm trường username
         btnRegister = findViewById(R.id.btnRegister);
         tvLogin = findViewById(R.id.tvLogin);
+        tvRegisterLabel = findViewById(R.id.tvRegisterLabel);
+        btnTogglePassword = findViewById(R.id.btnTogglePassword);
+        btnToggleConfirmPassword = findViewById(R.id.btnToggleConfirmPassword);
 
-        // Set click listeners
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Validate input
-                String phone = etPhone.getText().toString().trim();
-                String password = etPassword.getText().toString().trim();
-                String confirmPassword = etConfirmPassword.getText().toString().trim();
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Đang đăng ký...");
+        progressDialog.setCancelable(false);
+    }
 
-                if (phone.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-                    Toast.makeText(RegisterActivity.this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+    private void setupListeners() {
+        btnRegister.setOnClickListener(v -> handleRegistration());
+        tvRegisterLabel.setOnClickListener(v -> btnRegister.performClick());
+        tvLogin.setOnClickListener(v -> navigateToLogin());
 
-                if (!password.equals(confirmPassword)) {
-                    Toast.makeText(RegisterActivity.this, "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+        btnTogglePassword.setOnClickListener(v -> togglePasswordVisibility(etPassword, btnTogglePassword));
+        btnToggleConfirmPassword.setOnClickListener(v -> togglePasswordVisibility(etConfirmPassword, btnToggleConfirmPassword));
+    }
 
-                // TODO: Implement actual registration logic
-                // For now, just show success and navigate to login
-                Toast.makeText(RegisterActivity.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+    private void togglePasswordVisibility(EditText editText, ImageButton button) {
+        boolean isVisible = editText.getInputType() == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
 
-        tvLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+        int inputType = isVisible
+                ? InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD
+                : InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD;
+
+        int iconResource = isVisible ? R.drawable.eye_closed : R.drawable.eye_open;
+
+        editText.setInputType(inputType);
+        button.setImageResource(iconResource);
+        editText.setSelection(editText.getText().length());
+    }
+
+    private void handleRegistration() {
+        String email = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+        String confirmPassword = etConfirmPassword.getText().toString().trim();
+        String username = etUsername.getText().toString().trim(); // Lấy giá trị username
+
+        if (!validateInputFields(email, password, confirmPassword, username)) {
+            return;
+        }
+
+        progressDialog.show();
+        registerWithFirebaseAuth(email, password, username);
+    }
+
+    private boolean validateInputFields(String email, String password, String confirmPassword, String username) {
+        // Kiểm tra các trường trống
+        if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            showToast("Vui lòng nhập đầy đủ thông tin email và mật khẩu");
+            return false;
+        }
+
+        // Kiểm tra username nếu đã nhập
+        if (username.isEmpty()) {
+            showToast("Vui lòng nhập tên người dùng");
+            return false;
+        }
+
+        // Validate định dạng email
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showToast("Email không hợp lệ");
+            return false;
+        }
+
+        // Kiểm tra mật khẩu khớp nhau
+        if (!password.equals(confirmPassword)) {
+            showToast("Mật khẩu không khớp");
+            return false;
+        }
+
+        // Kiểm tra độ dài mật khẩu
+        if (password.length() < MIN_PASSWORD_LENGTH) {
+            showToast("Mật khẩu phải có ít nhất " + MIN_PASSWORD_LENGTH + " ký tự");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void registerWithFirebaseAuth(String email, String password, String username) {
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                sendVerificationEmail(user, username);
+                            } else {
+                                progressDialog.dismiss();
+                                showToast("Lỗi tạo tài khoản");
+                            }
+                        } else {
+                            progressDialog.dismiss();
+                            handleRegistrationError(task.getException());
+                        }
+                    }
+                });
+    }
+
+    private void handleRegistrationError(Exception exception) {
+        if (exception instanceof FirebaseAuthUserCollisionException) {
+            showToast("Email đã được sử dụng");
+        } else if (exception instanceof FirebaseAuthWeakPasswordException) {
+            showToast("Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn");
+        } else {
+            showToast("Đăng ký thất bại: " + (exception != null ? exception.getMessage() : "Lỗi không xác định"));
+        }
+        Log.e(TAG, "Registration error", exception);
+    }
+
+    private void sendVerificationEmail(FirebaseUser user, String username) {
+        user.sendEmailVerification()
+                .addOnCompleteListener(task -> {
+                    progressDialog.dismiss();
+
+                    if (task.isSuccessful()) {
+                        saveUserToDatabase(user.getUid(), user.getEmail(), username);
+                        navigateToRegisterSuccess();
+                    } else {
+                        showToast("Không thể gửi email xác thực: " + task.getException().getMessage());
+                        user.delete(); // Xóa tài khoản nếu không gửi được email xác thực
+                    }
+                });
+    }
+
+    private void saveUserToDatabase(String userId, String email, String username) {
+        try {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("email", email);
+            userData.put("username", username); // Lưu username vào database
+            userData.put("fullName", username); // Sử dụng username làm fullName ban đầu
+            userData.put("createdAt", System.currentTimeMillis());
+            userData.put("isVerified", false);
+
+            // Sử dụng setValue thay vì updateChildren để đảm bảo dữ liệu được ghi đúng
+            mDatabase.child("users").child(userId).setValue(userData)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "User data saved successfully");
+                        mAuth.signOut(); // Đăng xuất sau khi lưu dữ liệu
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Save user to database error", e);
+                        showToast("Lỗi lưu dữ liệu: " + e.getMessage());
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving user data", e);
+            showToast("Lỗi lưu dữ liệu người dùng: " + e.getMessage());
+        }
+    }
+
+    private void navigateToRegisterSuccess() {
+        Intent intent = new Intent(this, RegisterSuccessActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void navigateToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }
