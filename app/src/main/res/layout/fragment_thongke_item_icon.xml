@@ -6,15 +6,28 @@
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
     app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
 
-    <ImageView
-        android:id="@+id/imgIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="center"
-        android:padding="8dp"
-        android:src="@drawable/thongke_ic_other"
-        android:contentDescription="Icon danh mục" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/imgIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:padding="8dp"
+            android:src="@drawable/ic_other"
+            android:contentDescription="Icon danh mục" />
+
+        <View
+            android:id="@+id/selectedOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/icon_selected_background"
+            android:visibility="gone" />
+    </FrameLayout>
 
 </androidx.cardview.widget.CardView>

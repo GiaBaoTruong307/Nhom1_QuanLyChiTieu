@@ -784,7 +784,7 @@ public class TransactionManagementActivity extends AppCompatActivity {
                 }
 
                 // Nếu không tìm thấy, sử dụng icon mặc định
-                imageView.setImageResource(R.drawable.thongke_ic_other);
+                imageView.setImageResource(R.drawable.ic_other);
             }
         }
     }

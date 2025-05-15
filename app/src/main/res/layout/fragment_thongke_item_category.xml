@@ -12,7 +12,7 @@
         android:layout_height="40dp"
         android:background="@drawable/thongke_circle_background"
         android:padding="8dp"
-        android:src="@drawable/thongke_ic_other"
+        android:src="@drawable/ic_other"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

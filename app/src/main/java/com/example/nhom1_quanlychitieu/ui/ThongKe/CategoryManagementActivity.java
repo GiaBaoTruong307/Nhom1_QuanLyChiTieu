@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,9 +23,12 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.nhom1_quanlychitieu.R;
 import com.example.nhom1_quanlychitieu.model.Category;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -47,27 +52,59 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
     // UI components
     private ImageButton btnBack;
-    private RecyclerView rvCategories;
     private Button btnAddCategory;
     private TextView tvNoCategories;
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager;
 
     // Data
-    private CategoryAdapter adapter;
-    private final List<Category> categories = new ArrayList<>();
+    private CategoryAdapter expenseAdapter;
+    private CategoryAdapter incomeAdapter;
+    private final List<Category> allCategories = new ArrayList<>();
+    private final List<Category> expenseCategories = new ArrayList<>();
+    private final List<Category> incomeCategories = new ArrayList<>();
 
     // Firebase
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private String userId;
 
-    // Mảng các icon mặc định
-    private final int[] defaultIcons = {
-            R.drawable.thongke_ic_food,
-            R.drawable.thongke_ic_transport,
-            R.drawable.thongke_ic_shopping,
-            R.drawable.thongke_ic_entertainment,
-            R.drawable.thongke_ic_medical,
-            R.drawable.thongke_ic_other
+    // Mảng các icon mặc định cho chi tiêu
+    private final int[] expenseIcons = {
+            R.drawable.ic_expense_food,
+            R.drawable.ic_expense_transport,
+            R.drawable.ic_expense_shopping,
+            R.drawable.ic_expense_entertainment,
+            R.drawable.ic_expense_medical,
+            R.drawable.ic_expense_bills,
+            R.drawable.ic_expense_education,
+            R.drawable.ic_expense_gift,
+            R.drawable.ic_expense_home,
+            R.drawable.ic_expense_beauty,
+            R.drawable.ic_expense_car,
+            R.drawable.ic_expense_clothes,
+            R.drawable.ic_expense_coffee,
+            R.drawable.ic_expense_electronics,
+            R.drawable.ic_other
+    };
+
+    // Mảng các icon mặc định cho thu nhập
+    private final int[] incomeIcons = {
+            R.drawable.ic_income_salary,
+            R.drawable.ic_income_bonus,
+            R.drawable.ic_income_gift,
+            R.drawable.ic_income_investment,
+            R.drawable.ic_income_lottery,
+            R.drawable.ic_income_rental,
+            R.drawable.ic_income_sale,
+            R.drawable.ic_income_refund,
+            R.drawable.ic_income_business,
+            R.drawable.ic_income_commission,
+            R.drawable.ic_income_dividend,
+            R.drawable.ic_income_freelance,
+            R.drawable.ic_income_interest,
+            R.drawable.ic_income_pension,
+            R.drawable.ic_other
     };
 
     @Override
@@ -79,7 +116,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
         if (userId == null) return;
 
         initializeViews();
-        setupRecyclerView();
+        setupTabLayout();
         setupEventListeners();
         loadCategories();
     }
@@ -104,15 +141,32 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
     private void initializeViews() {
         btnBack = findViewById(R.id.btnBack);
-        rvCategories = findViewById(R.id.rvCategories);
         btnAddCategory = findViewById(R.id.btnAddCategory);
         tvNoCategories = findViewById(R.id.tvNoCategories);
+        tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
     }
 
-    private void setupRecyclerView() {
-        rvCategories.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new CategoryAdapter();
-        rvCategories.setAdapter(adapter);
+    private void setupTabLayout() {
+        // Khởi tạo adapters
+        expenseAdapter = new CategoryAdapter(expenseCategories);
+        incomeAdapter = new CategoryAdapter(incomeCategories);
+
+        // Thiết lập ViewPager2 với adapter
+        CategoryPagerAdapter pagerAdapter = new CategoryPagerAdapter();
+        viewPager.setAdapter(pagerAdapter);
+
+        // Kết nối TabLayout với ViewPager2
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            switch (position) {
+                case 0:
+                    tab.setText("Chi tiêu");
+                    break;
+                case 1:
+                    tab.setText("Thu nhập");
+                    break;
+            }
+        }).attach();
     }
 
     private void setupEventListeners() {
@@ -132,14 +186,23 @@ public class CategoryManagementActivity extends AppCompatActivity {
         mDatabase.child("categories").child(userId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                categories.clear();
+                allCategories.clear();
+                expenseCategories.clear();
+                incomeCategories.clear();
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     try {
                         Category category = snapshot.getValue(Category.class);
                         if (category != null) {
                             category.setId(snapshot.getKey());
-                            categories.add(category);
+                            allCategories.add(category);
+
+                            // Phân loại danh mục
+                            if (category.isIncome()) {
+                                incomeCategories.add(category);
+                            } else {
+                                expenseCategories.add(category);
+                            }
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error parsing category", e);
@@ -163,13 +226,18 @@ public class CategoryManagementActivity extends AppCompatActivity {
      * Cập nhật giao diện người dùng
      */
     private void updateUI() {
-        if (categories.isEmpty()) {
+        if (allCategories.isEmpty()) {
             tvNoCategories.setVisibility(View.VISIBLE);
-            rvCategories.setVisibility(View.GONE);
+            viewPager.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.GONE);
         } else {
             tvNoCategories.setVisibility(View.GONE);
-            rvCategories.setVisibility(View.VISIBLE);
-            adapter.notifyDataSetChanged();
+            viewPager.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.VISIBLE);
+
+            // Cập nhật adapters
+            expenseAdapter.notifyDataSetChanged();
+            incomeAdapter.notifyDataSetChanged();
         }
     }
 
@@ -195,6 +263,9 @@ public class CategoryManagementActivity extends AppCompatActivity {
         // Ánh xạ các thành phần trong dialog
         TextView tvDialogTitle = dialog.findViewById(R.id.tvDialogTitle);
         EditText etCategoryName = dialog.findViewById(R.id.etCategoryName);
+        RadioGroup rgCategoryType = dialog.findViewById(R.id.rgCategoryType);
+        RadioButton rbExpense = dialog.findViewById(R.id.rbExpense);
+        RadioButton rbIncome = dialog.findViewById(R.id.rbIncome);
         RecyclerView rvIcons = dialog.findViewById(R.id.rvIcons);
         Button btnCancel = dialog.findViewById(R.id.btnCancel);
         Button btnSave = dialog.findViewById(R.id.btnSave);
@@ -205,18 +276,27 @@ public class CategoryManagementActivity extends AppCompatActivity {
         // Thiết lập dữ liệu nếu là chỉnh sửa
         if (category != null) {
             etCategoryName.setText(category.getName());
+            if (category.isIncome()) {
+                rbIncome.setChecked(true);
+            } else {
+                rbExpense.setChecked(true);
+            }
         }
+
+        // Mặc định hiển thị icons chi tiêu
+        final int[] currentIcons = rbExpense.isChecked() ? expenseIcons : incomeIcons;
 
         // Thiết lập RecyclerView cho danh sách icon
         rvIcons.setLayoutManager(new GridLayoutManager(this, 4));
-        IconAdapter iconAdapter = new IconAdapter(defaultIcons, position -> {
+        IconAdapter iconAdapter = new IconAdapter(currentIcons, position -> {
             // Xử lý khi chọn icon
         });
 
         // Nếu là chỉnh sửa, chọn icon hiện tại
         if (category != null) {
-            for (int i = 0; i < defaultIcons.length; i++) {
-                if (defaultIcons[i] == category.getIconResourceId()) {
+            int[] icons = category.isIncome() ? incomeIcons : expenseIcons;
+            for (int i = 0; i < icons.length; i++) {
+                if (icons[i] == category.getIconResourceId()) {
                     iconAdapter.setSelectedPosition(i);
                     break;
                 }
@@ -224,6 +304,13 @@ public class CategoryManagementActivity extends AppCompatActivity {
         }
 
         rvIcons.setAdapter(iconAdapter);
+
+        // Xử lý sự kiện khi chọn loại danh mục
+        rgCategoryType.setOnCheckedChangeListener((group, checkedId) -> {
+            int[] icons = checkedId == R.id.rbExpense ? expenseIcons : incomeIcons;
+            iconAdapter.updateIcons(icons);
+            iconAdapter.setSelectedPosition(-1); // Reset selection
+        });
 
         // Thiết lập sự kiện cho các nút
         btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -240,12 +327,19 @@ public class CategoryManagementActivity extends AppCompatActivity {
                 return;
             }
 
+            // Xác định loại danh mục
+            String type = rbIncome.isChecked() ? "income" : "expense";
+
+            // Xác định icon đã chọn
+            int[] icons = type.equals("income") ? incomeIcons : expenseIcons;
+            int iconResourceId = icons[selectedIconPosition];
+
             if (category == null) {
                 // Thêm danh mục mới
-                addCategory(name, defaultIcons[selectedIconPosition]);
+                addCategory(name, iconResourceId, type);
             } else {
                 // Cập nhật danh mục
-                updateCategory(category.getId(), name, defaultIcons[selectedIconPosition]);
+                updateCategory(category.getId(), name, iconResourceId, type);
             }
 
             dialog.dismiss();
@@ -254,14 +348,14 @@ public class CategoryManagementActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void addCategory(String name, int iconResourceId) {
+    private void addCategory(String name, int iconResourceId, String type) {
         if (userId == null) {
             Toast.makeText(this, "Vui lòng đăng nhập để thêm danh mục", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Tạo đối tượng Category mới
-        Category category = new Category(name, iconResourceId);
+        Category category = new Category(name, iconResourceId, type);
         category.setUserId(userId);
 
         // Tạo key mới cho danh mục
@@ -279,7 +373,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
                         Toast.makeText(CategoryManagementActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    private void updateCategory(String categoryId, String name, int iconResourceId) {
+    private void updateCategory(String categoryId, String name, int iconResourceId, String type) {
         if (userId == null || categoryId == null) {
             Toast.makeText(this, "Lỗi cập nhật danh mục", Toast.LENGTH_SHORT).show();
             return;
@@ -289,6 +383,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
         Map<String, Object> updates = new HashMap<>();
         updates.put("name", name);
         updates.put("iconResourceId", iconResourceId);
+        updates.put("type", type);
 
         // Cập nhật danh mục trong Firebase
         mDatabase.child("categories").child(userId).child(categoryId).updateChildren(updates)
@@ -321,9 +416,61 @@ public class CategoryManagementActivity extends AppCompatActivity {
     }
 
     /**
+     * Adapter cho ViewPager2 hiển thị các tab danh mục
+     */
+    private class CategoryPagerAdapter extends RecyclerView.Adapter<CategoryPagerAdapter.CategoryPageViewHolder> {
+
+        @NonNull
+        @Override
+        public CategoryPageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            RecyclerView recyclerView = new RecyclerView(parent.getContext());
+            recyclerView.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT));
+            return new CategoryPageViewHolder(recyclerView);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CategoryPageViewHolder holder, int position) {
+            holder.bind(position);
+        }
+
+        @Override
+        public int getItemCount() {
+            return 2; // Chi tiêu và Thu nhập
+        }
+
+        class CategoryPageViewHolder extends RecyclerView.ViewHolder {
+            RecyclerView recyclerView;
+
+            CategoryPageViewHolder(@NonNull View itemView) {
+                super(itemView);
+                recyclerView = (RecyclerView) itemView;
+                recyclerView.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
+            }
+
+            void bind(int position) {
+                if (position == 0) {
+                    // Tab Chi tiêu
+                    recyclerView.setAdapter(expenseAdapter);
+                } else {
+                    // Tab Thu nhập
+                    recyclerView.setAdapter(incomeAdapter);
+                }
+            }
+        }
+    }
+
+    /**
      * Adapter cho RecyclerView hiển thị danh sách danh mục
      */
     private class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
+
+        private final List<Category> categories;
+
+        CategoryAdapter(List<Category> categories) {
+            this.categories = categories;
+        }
 
         @NonNull
         @Override
@@ -365,7 +512,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
                 if (category.getIconResourceId() != 0) {
                     imgCategoryIcon.setImageResource(category.getIconResourceId());
                 } else {
-                    imgCategoryIcon.setImageResource(R.drawable.thongke_ic_other);
+                    imgCategoryIcon.setImageResource(R.drawable.ic_other);
                 }
 
                 // Thiết lập sự kiện
@@ -380,7 +527,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
      */
     private class IconAdapter extends RecyclerView.Adapter<IconAdapter.IconViewHolder> {
 
-        private final int[] icons;
+        private int[] icons;
         private int selectedPosition = -1;
         private final OnIconSelectedListener listener;
 
@@ -422,33 +569,35 @@ public class CategoryManagementActivity extends AppCompatActivity {
             return selectedPosition;
         }
 
+        void updateIcons(int[] newIcons) {
+            this.icons = newIcons;
+            notifyDataSetChanged();
+        }
+
         class IconViewHolder extends RecyclerView.ViewHolder {
             ImageView imgIcon;
             CardView cardView;
+            View selectedOverlay;
 
             IconViewHolder(@NonNull View itemView) {
                 super(itemView);
                 imgIcon = itemView.findViewById(R.id.imgIcon);
                 cardView = (CardView) itemView;
+                selectedOverlay = itemView.findViewById(R.id.selectedOverlay);
             }
 
             void bind(int iconResId, boolean isSelected) {
                 imgIcon.setImageResource(iconResId);
 
-                // Thêm hiệu ứng khi chọn - sử dụng cách tiếp cận tương thích với CardView tiêu chuẩn
+                // Hiển thị hiệu ứng khi chọn
                 if (isSelected) {
                     cardView.setCardBackgroundColor(ContextCompat.getColor(CategoryManagementActivity.this, R.color.colorAccent));
                     cardView.setCardElevation(8f);
-                    // Sử dụng background drawable thay vì setStrokeWidth và setStrokeColor
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                        cardView.setForeground(ContextCompat.getDrawable(CategoryManagementActivity.this, R.drawable.thongke_selected_icon_background));
-                    }
+                    selectedOverlay.setVisibility(View.VISIBLE);
                 } else {
-                    cardView.setCardBackgroundColor(ContextCompat.getColor(CategoryManagementActivity.this, android.R.color.transparent));
+                    cardView.setCardBackgroundColor(ContextCompat.getColor(CategoryManagementActivity.this, android.R.color.white));
                     cardView.setCardElevation(2f);
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                        cardView.setForeground(null);
-                    }
+                    selectedOverlay.setVisibility(View.GONE);
                 }
 
                 itemView.setOnClickListener(v -> {

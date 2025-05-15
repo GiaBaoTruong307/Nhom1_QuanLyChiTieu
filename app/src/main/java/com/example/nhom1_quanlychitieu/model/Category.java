@@ -9,6 +9,7 @@ public class Category implements Serializable {
     private String userId;
     private boolean isDefault;
     private int iconResourceId; // Để lưu trữ ID resource của icon
+    private String type; // "expense" hoặc "income"
 
     // Constructor mặc định cần thiết cho Firebase
     public Category() {
@@ -17,12 +18,21 @@ public class Category implements Serializable {
     public Category(String name, String iconUrl) {
         this.name = name;
         this.iconUrl = iconUrl;
+        this.type = "expense"; // Mặc định là chi tiêu
     }
 
     public Category(String name, int iconResourceId) {
         this.name = name;
         this.iconResourceId = iconResourceId;
         this.isDefault = false;
+        this.type = "expense"; // Mặc định là chi tiêu
+    }
+
+    public Category(String name, int iconResourceId, String type) {
+        this.name = name;
+        this.iconResourceId = iconResourceId;
+        this.isDefault = false;
+        this.type = type;
     }
 
     // Getters và Setters
@@ -72,5 +82,21 @@ public class Category implements Serializable {
 
     public void setIconResourceId(int iconResourceId) {
         this.iconResourceId = iconResourceId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public boolean isExpense() {
+        return "expense".equals(type);
+    }
+
+    public boolean isIncome() {
+        return "income".equals(type);
     }
 }

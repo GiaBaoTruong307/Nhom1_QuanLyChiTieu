@@ -14,7 +14,7 @@
     <item
         android:id="@+id/daucong"
         android:icon="@drawable/ic_daucong"
-        android:title="" />
+        android:title="Thêm mới" />
 
     <item
         android:id="@+id/baocao"
