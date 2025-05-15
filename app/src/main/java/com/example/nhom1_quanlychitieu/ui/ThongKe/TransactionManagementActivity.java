@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,9 +27,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.nhom1_quanlychitieu.R;
-import com.example.nhom1_quanlychitieu.model.Category;
-import com.example.nhom1_quanlychitieu.model.Transaction;
-import com.example.nhom1_quanlychitieu.model.Wallet;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Category;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Transaction;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Wallet;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -294,6 +296,9 @@ public class TransactionManagementActivity extends AppCompatActivity {
 
         // Ánh xạ các thành phần trong dialog
         TextView tvDialogTitle = dialog.findViewById(R.id.tvDialogTitle);
+        RadioGroup rgTransactionType = dialog.findViewById(R.id.rgTransactionType);
+        RadioButton rbExpense = dialog.findViewById(R.id.rbExpense);
+        RadioButton rbIncome = dialog.findViewById(R.id.rbIncome);
         EditText etAmount = dialog.findViewById(R.id.etAmount);
         Spinner spinnerCategory = dialog.findViewById(R.id.spinnerCategory);
         Spinner spinnerWallet = dialog.findViewById(R.id.spinnerWallet);
@@ -321,8 +326,17 @@ public class TransactionManagementActivity extends AppCompatActivity {
             return;
         }
 
+        // Thiết lập loại giao dịch nếu là chỉnh sửa
+        if (transaction != null) {
+            if (transaction.getAmount() > 0) {
+                rbIncome.setChecked(true);
+            } else {
+                rbExpense.setChecked(true);
+            }
+        }
+
         // Thiết lập adapter cho spinner danh mục và ví
-        setupSpinners(spinnerCategory, spinnerWallet, transaction);
+        setupSpinners(spinnerCategory, spinnerWallet, transaction, rbExpense.isChecked());
 
         // Thiết lập dữ liệu nếu là chỉnh sửa
         if (transaction != null) {
@@ -339,12 +353,19 @@ public class TransactionManagementActivity extends AppCompatActivity {
         // Thiết lập sự kiện chọn ngày
         setupDatePicker(etDate);
 
+        // Thiết lập sự kiện khi chọn loại giao dịch
+        rgTransactionType.setOnCheckedChangeListener((group, checkedId) -> {
+            boolean isExpense = checkedId == R.id.rbExpense;
+            updateCategorySpinner(spinnerCategory, isExpense);
+        });
+
         // Thiết lập sự kiện cho các nút
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnSave.setOnClickListener(v -> {
             if (validateInput(etAmount, spinnerCategory, spinnerWallet)) {
-                saveTransaction(transaction, etAmount, spinnerCategory, spinnerWallet, etDate, etNote);
+                boolean isExpense = rbExpense.isChecked();
+                saveTransaction(transaction, etAmount, spinnerCategory, spinnerWallet, etDate, etNote, isExpense);
                 dialog.dismiss();
             }
         });
@@ -360,14 +381,9 @@ public class TransactionManagementActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void setupSpinners(Spinner spinnerCategory, Spinner spinnerWallet, Transaction transaction) {
+    private void setupSpinners(Spinner spinnerCategory, Spinner spinnerWallet, Transaction transaction, boolean isExpense) {
         // Thiết lập adapter cho spinner danh mục
-        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        for (Category category : categories) {
-            categoryAdapter.add(category.getName());
-        }
-        spinnerCategory.setAdapter(categoryAdapter);
+        updateCategorySpinner(spinnerCategory, isExpense);
 
         // Thiết lập adapter cho spinner ví
         ArrayAdapter<String> walletAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
@@ -380,8 +396,10 @@ public class TransactionManagementActivity extends AppCompatActivity {
         // Chọn danh mục và ví hiện tại nếu là chỉnh sửa
         if (transaction != null) {
             // Tìm và chọn danh mục
-            for (int i = 0; i < categories.size(); i++) {
-                if (categories.get(i).getName().equals(transaction.getCategory())) {
+            String categoryName = transaction.getCategory();
+            ArrayAdapter<String> adapter = (ArrayAdapter<String>) spinnerCategory.getAdapter();
+            for (int i = 0; i < adapter.getCount(); i++) {
+                if (adapter.getItem(i).equals(categoryName)) {
                     spinnerCategory.setSelection(i);
                     break;
                 }
@@ -395,6 +413,30 @@ public class TransactionManagementActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void updateCategorySpinner(Spinner spinnerCategory, boolean isExpense) {
+        // Lọc danh mục theo loại (chi tiêu hoặc thu nhập)
+        List<String> filteredCategories = new ArrayList<>();
+        for (Category category : categories) {
+            if ((isExpense && category.isExpense()) || (!isExpense && category.isIncome())) {
+                filteredCategories.add(category.getName());
+            }
+        }
+
+        // Nếu không có danh mục phù hợp, hiển thị thông báo
+        if (filteredCategories.isEmpty()) {
+            if (isExpense) {
+                filteredCategories.add("Chưa có danh mục chi tiêu");
+            } else {
+                filteredCategories.add("Chưa có danh mục thu nhập");
+            }
+        }
+
+        // Cập nhật adapter
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, filteredCategories);
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategory.setAdapter(categoryAdapter);
     }
 
     private void setupDatePicker(EditText etDate) {
@@ -435,6 +477,13 @@ public class TransactionManagementActivity extends AppCompatActivity {
             return false;
         }
 
+        String categoryName = spinnerCategory.getSelectedItem().toString();
+        if (categoryName.startsWith("Chưa có danh mục")) {
+            Toast.makeText(this, "Vui lòng thêm danh mục trước", Toast.LENGTH_SHORT).show();
+            openCategoryManagement();
+            return false;
+        }
+
         // Kiểm tra ví
         if (spinnerWallet.getSelectedItem() == null) {
             Toast.makeText(this, "Vui lòng chọn ví", Toast.LENGTH_SHORT).show();
@@ -445,9 +494,16 @@ public class TransactionManagementActivity extends AppCompatActivity {
     }
 
     private void saveTransaction(Transaction transaction, EditText etAmount, Spinner spinnerCategory,
-                                 Spinner spinnerWallet, EditText etDate, EditText etNote) {
+                                 Spinner spinnerWallet, EditText etDate, EditText etNote, boolean isExpense) {
         // Lấy dữ liệu từ form
         long amount = Long.parseLong(etAmount.getText().toString().trim());
+        // Nếu là chi tiêu, đổi dấu số tiền
+        if (isExpense) {
+            amount = -Math.abs(amount);
+        } else {
+            amount = Math.abs(amount);
+        }
+
         String categoryName = spinnerCategory.getSelectedItem().toString();
         String walletName = spinnerWallet.getSelectedItem().toString();
         String note = etNote.getText().toString().trim();

@@ -16,7 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.nhom1_quanlychitieu.R;
-import com.example.nhom1_quanlychitieu.model.Transaction;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Transaction;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;

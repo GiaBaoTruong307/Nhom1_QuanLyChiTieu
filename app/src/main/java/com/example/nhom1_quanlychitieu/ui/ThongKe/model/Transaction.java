@@ -1,4 +1,4 @@
-package com.example.nhom1_quanlychitieu.model;
+package com.example.nhom1_quanlychitieu.ui.ThongKe.model;
 
 import java.io.Serializable;
 

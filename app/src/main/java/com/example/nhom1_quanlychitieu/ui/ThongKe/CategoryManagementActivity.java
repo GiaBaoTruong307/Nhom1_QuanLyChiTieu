@@ -26,7 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.nhom1_quanlychitieu.R;
-import com.example.nhom1_quanlychitieu.model.Category;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Category;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;

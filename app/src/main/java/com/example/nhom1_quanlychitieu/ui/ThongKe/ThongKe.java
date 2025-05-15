@@ -1,5 +1,6 @@
 package com.example.nhom1_quanlychitieu.ui.ThongKe;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,9 +21,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.nhom1_quanlychitieu.R;
-import com.example.nhom1_quanlychitieu.model.Category;
-import com.example.nhom1_quanlychitieu.model.Transaction;
-import com.example.nhom1_quanlychitieu.model.Wallet;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Category;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Transaction;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Wallet;
 import com.example.nhom1_quanlychitieu.ui.QuanLyChungThuc.LoginActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -184,14 +185,43 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
             String email = currentUser.getEmail();
             String displayName = currentUser.getDisplayName();
 
-            tvGreeting.setText("Xin chào, " + (email != null ? email : ""));
-
+            // Hiển thị tên người dùng nếu có, nếu không thì hiển thị email
             if (displayName != null && !displayName.isEmpty()) {
+                tvGreeting.setText("Xin chào, " + displayName);
                 tvUserName.setText(displayName);
             } else {
+                tvGreeting.setText("Xin chào, " + (email != null ? email : ""));
                 tvUserName.setText("Người dùng");
             }
+
+            // Nếu chưa có displayName, lấy thông tin từ database
+            if ((displayName == null || displayName.isEmpty()) && email != null) {
+                loadUserDisplayName(currentUser.getUid());
+            }
         }
+    }
+
+    /**
+     * Tải tên hiển thị của người dùng từ database
+     */
+    private void loadUserDisplayName(String userId) {
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists() && isAdded()) {
+                    String fullName = dataSnapshot.child("fullName").getValue(String.class);
+                    if (fullName != null && !fullName.isEmpty()) {
+                        tvGreeting.setText("Xin chào, " + fullName);
+                        tvUserName.setText(fullName);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e(TAG, "Error loading user data: " + databaseError.getMessage());
+            }
+        });
     }
 
     /**
@@ -420,6 +450,74 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
+    private void confirmDeleteTransaction(Transaction transaction) {
+        if (transaction == null || transaction.getId() == null || getContext() == null) {
+            Toast.makeText(getContext(), "Lỗi xóa giao dịch", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Hiển thị dialog xác nhận
+        new AlertDialog.Builder(getContext())
+                .setTitle("Xác nhận xóa")
+                .setMessage("Bạn có chắc chắn muốn xóa giao dịch này?")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    deleteTransaction(transaction);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void deleteTransaction(Transaction transaction) {
+        String userId = getCurrentUserId();
+        if (userId == null || transaction == null || transaction.getId() == null) {
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Lỗi xóa giao dịch", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+
+        // Xóa giao dịch khỏi Firebase
+        mDatabase.child("transactions").child(userId).child(transaction.getId()).removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Xóa giao dịch thành công", Toast.LENGTH_SHORT).show();
+                    }
+
+                    // Cập nhật số dư ví
+                    updateWalletBalance(transaction.getWalletId(), -transaction.getAmount());
+                })
+                .addOnFailureListener(e -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void updateWalletBalance(String walletId, long amountChange) {
+        String userId = getCurrentUserId();
+        if (userId == null || walletId == null) {
+            return;
+        }
+
+        // Lấy thông tin ví hiện tại
+        mDatabase.child("wallets").child(userId).child(walletId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Wallet wallet = dataSnapshot.getValue(Wallet.class);
+                if (wallet != null) {
+                    // Cập nhật số dư
+                    long newBalance = wallet.getBalance() + amountChange;
+                    mDatabase.child("wallets").child(userId).child(walletId).child("balance").setValue(newBalance);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e(TAG, "Database error: " + databaseError.getMessage());
+            }
+        });
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -527,6 +625,7 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         class TransactionViewHolder extends RecyclerView.ViewHolder {
             ImageView imgCategory;
             TextView tvCategory, tvAmount, tvNote, tvWallet;
+            ImageButton btnDeleteTransaction;
 
             TransactionViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -535,6 +634,7 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
                 tvAmount = itemView.findViewById(R.id.tvAmount);
                 tvNote = itemView.findViewById(R.id.tvNote);
                 tvWallet = itemView.findViewById(R.id.tvWallet);
+                btnDeleteTransaction = itemView.findViewById(R.id.btnDeleteTransaction);
             }
 
             void bind(Transaction transaction) {
@@ -575,6 +675,9 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
 
                 // Thiết lập sự kiện click
                 itemView.setOnClickListener(v -> openEditTransaction(transaction));
+
+                // Thiết lập sự kiện cho nút xóa
+                btnDeleteTransaction.setOnClickListener(v -> confirmDeleteTransaction(transaction));
             }
 
             /**
