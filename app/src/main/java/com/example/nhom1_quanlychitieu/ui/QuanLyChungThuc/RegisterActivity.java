@@ -16,9 +16,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nhom1_quanlychitieu.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
@@ -70,7 +67,7 @@ public class RegisterActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        etUsername = findViewById(R.id.etUsername); // Thêm trường username
+        etUsername = findViewById(R.id.etUsername);
         btnRegister = findViewById(R.id.btnRegister);
         tvLogin = findViewById(R.id.tvLogin);
         tvRegisterLabel = findViewById(R.id.tvRegisterLabel);
@@ -109,7 +106,7 @@ public class RegisterActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
-        String username = etUsername.getText().toString().trim(); // Lấy giá trị username
+        String username = etUsername.getText().toString().trim();
 
         if (!validateInputFields(email, password, confirmPassword, username)) {
             return;
@@ -120,31 +117,26 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private boolean validateInputFields(String email, String password, String confirmPassword, String username) {
-        // Kiểm tra các trường trống
         if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             showToast("Vui lòng nhập đầy đủ thông tin email và mật khẩu");
             return false;
         }
 
-        // Kiểm tra username nếu đã nhập
         if (username.isEmpty()) {
             showToast("Vui lòng nhập tên người dùng");
             return false;
         }
 
-        // Validate định dạng email
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             showToast("Email không hợp lệ");
             return false;
         }
 
-        // Kiểm tra mật khẩu khớp nhau
         if (!password.equals(confirmPassword)) {
             showToast("Mật khẩu không khớp");
             return false;
         }
 
-        // Kiểm tra độ dài mật khẩu
         if (password.length() < MIN_PASSWORD_LENGTH) {
             showToast("Mật khẩu phải có ít nhất " + MIN_PASSWORD_LENGTH + " ký tự");
             return false;
@@ -155,21 +147,18 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void registerWithFirebaseAuth(String email, String password, String username) {
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null) {
-                                sendVerificationEmail(user, username);
-                            } else {
-                                progressDialog.dismiss();
-                                showToast("Lỗi tạo tài khoản");
-                            }
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            sendVerificationEmail(user, username, password);
                         } else {
                             progressDialog.dismiss();
-                            handleRegistrationError(task.getException());
+                            showToast("Lỗi tạo tài khoản");
                         }
+                    } else {
+                        progressDialog.dismiss();
+                        handleRegistrationError(task.getException());
                     }
                 });
     }
@@ -185,13 +174,13 @@ public class RegisterActivity extends AppCompatActivity {
         Log.e(TAG, "Registration error", exception);
     }
 
-    private void sendVerificationEmail(FirebaseUser user, String username) {
+    private void sendVerificationEmail(FirebaseUser user, String username, String password) {
         user.sendEmailVerification()
                 .addOnCompleteListener(task -> {
                     progressDialog.dismiss();
 
                     if (task.isSuccessful()) {
-                        saveUserToDatabase(user.getUid(), user.getEmail(), username);
+                        saveUserToDatabase(user.getUid(), user.getEmail(), username, password);
                         navigateToRegisterSuccess();
                     } else {
                         showToast("Không thể gửi email xác thực: " + task.getException().getMessage());
@@ -200,16 +189,16 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
-    private void saveUserToDatabase(String userId, String email, String username) {
+    private void saveUserToDatabase(String userId, String email, String username, String password) {
         try {
             Map<String, Object> userData = new HashMap<>();
             userData.put("email", email);
-            userData.put("username", username); // Lưu username vào database
-            userData.put("fullName", username); // Sử dụng username làm fullName ban đầu
+            userData.put("username", username);
+            userData.put("fullName", username);
+            userData.put("password", password); // Lưu mật khẩu vào database
             userData.put("createdAt", System.currentTimeMillis());
             userData.put("isVerified", false);
 
-            // Sử dụng setValue thay vì updateChildren để đảm bảo dữ liệu được ghi đúng
             mDatabase.child("users").child(userId).setValue(userData)
                     .addOnSuccessListener(aVoid -> {
                         Log.d(TAG, "User data saved successfully");

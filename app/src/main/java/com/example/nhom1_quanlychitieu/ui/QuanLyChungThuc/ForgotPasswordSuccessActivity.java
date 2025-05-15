@@ -24,26 +24,29 @@ public class ForgotPasswordSuccessActivity extends AppCompatActivity {
         try {
             setContentView(R.layout.fragment_forgot_password_success);
 
-            // Lấy email từ intent
             String email = getIntent().getStringExtra("email");
-
-            // Khởi tạo các thành phần giao diện
-            btnLogin = findViewById(R.id.btnLogin);
-            tvSuccessMessage = findViewById(R.id.tvSuccessMessage);
-
-            // Cập nhật thông báo với email
-            String message = "Email đặt lại mật khẩu đã được gửi đến " + email + ". Vui lòng kiểm tra hộp thư của bạn và làm theo hướng dẫn để đặt lại mật khẩu.";
-            if (tvSuccessMessage != null) {
-                tvSuccessMessage.setText(message);
-            }
-
-            // Thiết lập sự kiện cho nút đăng nhập
-            if (btnLogin != null) {
-                btnLogin.setOnClickListener(v -> navigateToLogin());
-            }
+            initializeViews(email);
+            setupListeners();
         } catch (Exception e) {
             Log.e(TAG, "onCreate error: " + e.getMessage());
             Toast.makeText(this, "Lỗi khởi tạo màn hình: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void initializeViews(String email) {
+        btnLogin = findViewById(R.id.btnLogin);
+        tvSuccessMessage = findViewById(R.id.tvSuccessMessage);
+
+        if (email != null && tvSuccessMessage != null) {
+            String message = "Email đặt lại mật khẩu đã được gửi đến " + email +
+                    ". Vui lòng kiểm tra hộp thư của bạn và làm theo hướng dẫn để đặt lại mật khẩu.";
+            tvSuccessMessage.setText(message);
+        }
+    }
+
+    private void setupListeners() {
+        if (btnLogin != null) {
+            btnLogin.setOnClickListener(v -> navigateToLogin());
         }
     }
 

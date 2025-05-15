@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/thongke">
+    app:startDestination="@+id/baocao">
 
     <!-- Fragment Thống Kê - Màn hình chính -->
     <fragment

@@ -10,12 +10,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nhom1_quanlychitieu.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 
@@ -90,16 +87,13 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     private void sendPasswordResetEmail(String email) {
         mAuth.sendPasswordResetEmail(email)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        progressDialog.dismiss();
+                .addOnCompleteListener(task -> {
+                    progressDialog.dismiss();
 
-                        if (task.isSuccessful()) {
-                            navigateToSuccessScreen(email);
-                        } else {
-                            handleResetError(task.getException());
-                        }
+                    if (task.isSuccessful()) {
+                        navigateToSuccessScreen(email);
+                    } else {
+                        handleResetError(task.getException());
                     }
                 });
     }

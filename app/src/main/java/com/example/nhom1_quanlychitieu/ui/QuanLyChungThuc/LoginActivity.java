@@ -20,9 +20,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nhom1_quanlychitieu.MainActivity;
 import com.example.nhom1_quanlychitieu.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
@@ -100,7 +97,6 @@ public class LoginActivity extends AppCompatActivity {
     private void checkCurrentUser() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null && currentUser.isEmailVerified()) {
-            // Người dùng đã đăng nhập và đã xác thực email
             navigateToMainActivity();
         }
     }
@@ -135,16 +131,13 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Attempting to login with email: " + email);
 
         mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        progressDialog.dismiss();
+                .addOnCompleteListener(this, task -> {
+                    progressDialog.dismiss();
 
-                        if (task.isSuccessful()) {
-                            handleSuccessfulLogin();
-                        } else {
-                            handleLoginError(task.getException());
-                        }
+                    if (task.isSuccessful()) {
+                        handleSuccessfulLogin();
+                    } else {
+                        handleLoginError(task.getException());
                     }
                 });
     }
@@ -166,7 +159,6 @@ public class LoginActivity extends AppCompatActivity {
 
         if (user != null) {
             if (user.isEmailVerified()) {
-                // Kiểm tra và cập nhật thông tin người dùng trong Realtime Database
                 updateUserLoginStatus(user.getUid());
             } else {
                 showToast("Vui lòng xác thực email trước khi đăng nhập");
@@ -183,13 +175,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    // Cập nhật thông tin đăng nhập
                     userRef.child("lastLogin").setValue(System.currentTimeMillis());
                     userRef.child("isVerified").setValue(true);
-
                     showLoginSuccessDialog();
                 } else {
-                    // Tạo thông tin người dùng nếu chưa tồn tại
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user != null) {
                         createNewUserProfile(user.getUid(), user.getEmail());
@@ -264,14 +253,12 @@ public class LoginActivity extends AppCompatActivity {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.fragment_login_success);
 
-        // Thiết lập kích thước dialog
         Window window = dialog.getWindow();
         if (window != null) {
             window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
             window.setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        // Thiết lập nút xác nhận
         Button btnConfirm = dialog.findViewById(R.id.btnConfirm);
         btnConfirm.setOnClickListener(v -> {
             dialog.dismiss();
