@@ -93,6 +93,14 @@ public class GoalAdapter extends ListAdapter<Goal, GoalAdapter.GoalViewHolder> {
                 return R.drawable.lapkehoach_ic_toy;
             case "jewelry":
                 return R.drawable.lapkehoach_ic_jewelry;
+            case "education":
+                return R.drawable.lapkehoach_ic_education;
+            case "wedding":
+                return R.drawable.lapkehoach_ic_wedding;
+            case "investment":
+                return R.drawable.lapkehoach_ic_investment;
+            case "other":
+                return R.drawable.lapkehoach_ic_other;
             default:
                 return R.drawable.lapkehoach_ic_default;
         }

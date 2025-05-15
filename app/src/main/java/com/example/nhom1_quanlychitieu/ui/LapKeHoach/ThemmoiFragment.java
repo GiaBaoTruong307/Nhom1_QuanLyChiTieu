@@ -1,7 +1,9 @@
 package com.example.nhom1_quanlychitieu.ui.LapKeHoach;
 
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,13 +17,19 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.nhom1_quanlychitieu.R;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 public class ThemmoiFragment extends DialogFragment {
 
     private EditText editTextGoal;
     private EditText editTextAmount;
+    private Button buttonCancel;
+    private Button buttonAdd;
     private GoalAddListener listener;
     private String selectedGoalType = "";
     private String selectedGoalTypeName = "";
+    private final NumberFormat numberFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
 
     // Interface để giao tiếp với Fragment cha
     public interface GoalAddListener {
@@ -59,8 +67,8 @@ public class ThemmoiFragment extends DialogFragment {
     private void initializeViews(View view) {
         editTextGoal = view.findViewById(R.id.editTextGoal);
         editTextAmount = view.findViewById(R.id.editTextAmount);
-        Button buttonCancel = view.findViewById(R.id.buttonCancel);
-        Button buttonAdd = view.findViewById(R.id.buttonAdd);
+        buttonCancel = view.findViewById(R.id.buttonCancel);
+        buttonAdd = view.findViewById(R.id.buttonAdd);
 
         // Hiển thị dialog chọn loại mục tiêu khi nhấn vào EditText
         editTextGoal.setOnClickListener(v -> showGoalTypeDialog());
@@ -71,11 +79,56 @@ public class ThemmoiFragment extends DialogFragment {
             editTextGoal.setText(selectedGoalTypeName);
         }
 
+        // Thiết lập định dạng tiền tệ cho EditText số tiền
+        setupCurrencyFormatting(editTextAmount);
+
         // Xử lý nút "HỦY" - Đóng dialog
-        buttonCancel.setOnClickListener(v -> dismiss());
+        if (buttonCancel != null) {
+            buttonCancel.setOnClickListener(v -> dismiss());
+        }
 
         // Xử lý nút "THÊM" - Lấy dữ liệu và thêm mục tiêu mới
-        buttonAdd.setOnClickListener(v -> addNewGoal());
+        if (buttonAdd != null) {
+            buttonAdd.setOnClickListener(v -> addNewGoal());
+        }
+    }
+
+    private void setupCurrencyFormatting(final EditText editText) {
+        editText.addTextChangedListener(new TextWatcher() {
+            private String current = "";
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.toString().equals(current)) {
+                    editText.removeTextChangedListener(this);
+
+                    String cleanString = s.toString().replaceAll("[.,]", "");
+                    if (!cleanString.isEmpty()) {
+                        try {
+                            long parsed = Long.parseLong(cleanString);
+                            String formatted = numberFormat.format(parsed);
+                            current = formatted;
+                            editText.setText(formatted);
+                            editText.setSelection(formatted.length());
+                        } catch (NumberFormatException e) {
+                            // Xử lý lỗi nếu cần
+                        }
+                    } else {
+                        current = "";
+                    }
+
+                    editText.addTextChangedListener(this);
+                }
+            }
+        });
     }
 
     private void showGoalTypeDialog() {
@@ -94,17 +147,17 @@ public class ThemmoiFragment extends DialogFragment {
 
         // Kiểm tra dữ liệu nhập
         if (TextUtils.isEmpty(goalName)) {
-            Toast.makeText(getContext(), "Vui lòng chọn mục tiêu", Toast.LENGTH_SHORT).show();
+            showToast("Vui lòng chọn mục tiêu");
             return;
         }
 
         if (TextUtils.isEmpty(selectedGoalType)) {
-            Toast.makeText(getContext(), "Vui lòng chọn loại mục tiêu", Toast.LENGTH_SHORT).show();
+            showToast("Vui lòng chọn loại mục tiêu");
             return;
         }
 
         if (TextUtils.isEmpty(amountStr)) {
-            Toast.makeText(getContext(), "Vui lòng nhập số tiền", Toast.LENGTH_SHORT).show();
+            showToast("Vui lòng nhập số tiền");
             return;
         }
 
@@ -112,7 +165,7 @@ public class ThemmoiFragment extends DialogFragment {
             // Loại bỏ dấu phân cách
             long amount = Long.parseLong(amountStr.replaceAll("[.,]", ""));
             if (amount <= 0) {
-                Toast.makeText(getContext(), "Số tiền phải lớn hơn 0", Toast.LENGTH_SHORT).show();
+                showToast("Số tiền phải lớn hơn 0");
                 return;
             }
 
@@ -122,7 +175,13 @@ public class ThemmoiFragment extends DialogFragment {
             }
             dismiss(); // Đóng dialog sau khi thêm
         } catch (NumberFormatException e) {
-            Toast.makeText(getContext(), "Số tiền không hợp lệ", Toast.LENGTH_SHORT).show();
+            showToast("Số tiền không hợp lệ");
+        }
+    }
+
+    private void showToast(String message) {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -139,7 +198,7 @@ public class ThemmoiFragment extends DialogFragment {
         super.onStart();
         // Tùy chỉnh kích thước dialog
         if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setLayout(900, ViewGroup.LayoutParams.WRAP_CONTENT);
+            getDialog().getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
     }
 }

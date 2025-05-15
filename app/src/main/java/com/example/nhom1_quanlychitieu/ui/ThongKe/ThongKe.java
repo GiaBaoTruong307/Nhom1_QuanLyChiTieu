@@ -139,9 +139,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         loadTransactions();
     }
 
-    /**
-     * Xử lý sự kiện khi chọn item trong bottom navigation
-     */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
@@ -176,9 +173,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
-    /**
-     * Hiển thị thông tin người dùng
-     */
     private void displayUserInfo() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null && isAdded()) {
@@ -201,9 +195,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
-    /**
-     * Tải tên hiển thị của người dùng từ database
-     */
     private void loadUserDisplayName(String userId) {
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -224,9 +215,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         });
     }
 
-    /**
-     * Tải danh sách danh mục từ Firebase
-     */
     private void loadCategories() {
         String userId = getCurrentUserId();
         if (userId == null) return;
@@ -264,9 +252,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         });
     }
 
-    /**
-     * Tải danh sách ví từ Firebase
-     */
     private void loadWallets() {
         String userId = getCurrentUserId();
         if (userId == null) return;
@@ -304,9 +289,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         });
     }
 
-    /**
-     * Tải danh sách giao dịch từ Firebase
-     */
     private void loadTransactions() {
         String userId = getCurrentUserId();
         if (userId == null) return;
@@ -391,9 +373,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         return currentUser.getUid();
     }
 
-    /**
-     * Cập nhật giao diện người dùng
-     */
     private void updateUI() {
         if (transactions.isEmpty()) {
             tvNoTransactions.setVisibility(View.VISIBLE);
@@ -407,9 +386,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
-    /**
-     * Đăng xuất khỏi ứng dụng
-     */
     private void logout() {
         mAuth.signOut();
         if (getActivity() != null) {
@@ -419,9 +395,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
-    /**
-     * Mở màn hình quản lý danh mục
-     */
     private void openCategoryManagement() {
         if (getActivity() != null) {
             Intent intent = new Intent(getActivity(), CategoryManagementActivity.class);
@@ -429,9 +402,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
-    /**
-     * Mở màn hình thêm giao dịch mới
-     */
     private void openAddTransaction() {
         if (getActivity() != null) {
             Intent intent = new Intent(getActivity(), TransactionManagementActivity.class);
@@ -439,9 +409,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
-    /**
-     * Mở màn hình chỉnh sửa giao dịch
-     */
     private void openEditTransaction(Transaction transaction) {
         if (transaction != null && transaction.getId() != null && getActivity() != null) {
             Intent intent = new Intent(getActivity(), TransactionManagementActivity.class);
@@ -525,9 +492,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         loadTransactions();
     }
 
-    /**
-     * Adapter cho RecyclerView hiển thị danh sách giao dịch
-     */
     private class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         private static final int VIEW_TYPE_DATE_HEADER = 0;
         private static final int VIEW_TYPE_TRANSACTION = 1;
@@ -570,9 +534,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
             }
         }
 
-        /**
-         * Chuẩn bị dữ liệu cho adapter, nhóm giao dịch theo ngày
-         */
         private void prepareItems() {
             items.clear();
 
@@ -601,9 +562,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
             }
         }
 
-        /**
-         * ViewHolder cho header ngày
-         */
         class DateHeaderViewHolder extends RecyclerView.ViewHolder {
             TextView tvDate, tvDayOfWeek;
 
@@ -619,9 +577,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
             }
         }
 
-        /**
-         * ViewHolder cho giao dịch
-         */
         class TransactionViewHolder extends RecyclerView.ViewHolder {
             ImageView imgCategory;
             TextView tvCategory, tvAmount, tvNote, tvWallet;
@@ -680,9 +635,6 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
                 btnDeleteTransaction.setOnClickListener(v -> confirmDeleteTransaction(transaction));
             }
 
-            /**
-             * Thiết lập icon cho danh mục
-             */
             private void setIconForCategory(ImageView imageView, String categoryName) {
                 // Tìm icon từ danh sách danh mục
                 for (Category category : categories) {

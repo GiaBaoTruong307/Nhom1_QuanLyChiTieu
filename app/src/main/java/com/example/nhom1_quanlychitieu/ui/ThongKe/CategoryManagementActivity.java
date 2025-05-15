@@ -174,9 +174,6 @@ public class CategoryManagementActivity extends AppCompatActivity {
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
     }
 
-    /**
-     * Tải danh sách danh mục từ Firebase
-     */
     private void loadCategories() {
         if (userId == null) {
             tvNoCategories.setVisibility(View.VISIBLE);
@@ -222,9 +219,6 @@ public class CategoryManagementActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Cập nhật giao diện người dùng
-     */
     private void updateUI() {
         if (allCategories.isEmpty()) {
             tvNoCategories.setVisibility(View.VISIBLE);
@@ -415,9 +409,6 @@ public class CategoryManagementActivity extends AppCompatActivity {
                 .show();
     }
 
-    /**
-     * Adapter cho ViewPager2 hiển thị các tab danh mục
-     */
     private class CategoryPagerAdapter extends RecyclerView.Adapter<CategoryPagerAdapter.CategoryPageViewHolder> {
 
         @NonNull
@@ -461,9 +452,6 @@ public class CategoryManagementActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Adapter cho RecyclerView hiển thị danh sách danh mục
-     */
     private class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
         private final List<Category> categories;
@@ -522,9 +510,6 @@ public class CategoryManagementActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Adapter cho RecyclerView hiển thị danh sách icon
-     */
     private class IconAdapter extends RecyclerView.Adapter<IconAdapter.IconViewHolder> {
 
         private int[] icons;

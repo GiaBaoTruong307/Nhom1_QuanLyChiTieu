@@ -48,6 +48,6 @@ public class GoalViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        // Dọn dẹp tài nguyên nếu cần
+        repository.cleanup();
     }
 }

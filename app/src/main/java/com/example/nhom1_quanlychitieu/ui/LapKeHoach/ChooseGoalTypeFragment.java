@@ -51,18 +51,24 @@ public class ChooseGoalTypeFragment extends DialogFragment {
                 new GoalTypeOption(R.id.layoutTypeHouse, "house", "Mua nhà"),
                 new GoalTypeOption(R.id.layoutTypePhone, "phone", "Mua điện thoại"),
                 new GoalTypeOption(R.id.layoutTypeToy, "toy", "Mua đồ chơi"),
-                new GoalTypeOption(R.id.layoutTypeJewelry, "jewelry", "Mua trang sức")
+                new GoalTypeOption(R.id.layoutTypeJewelry, "jewelry", "Mua trang sức"),
+                new GoalTypeOption(R.id.layoutTypeEducation, "education", "Học tập"),
+                new GoalTypeOption(R.id.layoutTypeWedding, "wedding", "Đám cưới"),
+                new GoalTypeOption(R.id.layoutTypeInvestment, "investment", "Đầu tư"),
+                new GoalTypeOption(R.id.layoutTypeOther, "other", "Khác")
         };
 
         // Thiết lập sự kiện click cho từng loại
         for (final GoalTypeOption option : goalTypes) {
-            LinearLayout layout = view.findViewById(option.viewId);
-            layout.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onGoalTypeSelected(option.type, option.name);
-                }
-                dismiss();
-            });
+            View optionView = view.findViewById(option.viewId);
+            if (optionView != null) {
+                optionView.setOnClickListener(v -> {
+                    if (listener != null) {
+                        listener.onGoalTypeSelected(option.type, option.name);
+                    }
+                    dismiss();
+                });
+            }
         }
     }
 

@@ -1,10 +1,12 @@
 package com.example.nhom1_quanlychitieu.ui.LapKeHoach;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,126 +35,122 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
-public class LapKeHoach extends Fragment implements GoalAdapter.OnGoalClickListener {
+public class LapKeHoach extends Fragment implements
+        GoalAdapter.OnGoalClickListener,
+        MenuLapKeHoachFragment.GoalActionListener,
+        ThemmoiFragment.GoalAddListener,
+        SuamuctieuFragment.GoalUpdateListener {
 
-    private static final String TAG = "LapKeHoach";
+    private static final String TAG = "LapKeHoachFragment";
+    private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
+    // ViewModel
     private GoalViewModel viewModel;
-    private GoalAdapter adapter;
-    private TextView tvTotalAmount;
+
+    // UI Components
+    private RecyclerView recyclerViewGoals;
+    private GoalAdapter goalAdapter;
     private ProgressBar progressBarTotal;
-    private View emptyView;
-    private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+    private TextView tvTotalAmount;
+    private LinearLayout emptyView;
+    private FloatingActionButton fabAddGoal;
 
     // Firebase
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private String userId;
 
-    // Tổng thu nhập từ chức năng thống kê
-    private long totalIncome = 0;
+    // Tổng số dư từ các ví
+    private long totalBalance = 0;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Nạp layout cho fragment
         View view = inflater.inflate(R.layout.fragment_lapkehoach, container, false);
-
-        // Khởi tạo Firebase
-        initFirebase();
-
-        // Khởi tạo ViewModel
-        viewModel = new ViewModelProvider(this).get(GoalViewModel.class);
-
-        // Tìm các view trong layout
         initializeViews(view);
-
-        // Thiết lập RecyclerView
-        setupRecyclerView(view);
-
-        // Thiết lập FloatingActionButton để thêm mục tiêu mới
-        setupFabButton(view);
-
-        // Quan sát dữ liệu từ ViewModel
-        observeViewModel();
-
-        // Tải dữ liệu thu nhập từ chức năng thống kê
-        loadIncomeData();
-
+        setupFirebase();
+        setupRecyclerView();
         return view;
     }
 
-    private void initFirebase() {
-        try {
-            mAuth = FirebaseAuth.getInstance();
-            mDatabase = FirebaseDatabase.getInstance().getReference();
-
-            FirebaseUser currentUser = mAuth.getCurrentUser();
-            if (currentUser != null) {
-                userId = currentUser.getUid();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error initializing Firebase", e);
-            if (getContext() != null) {
-                Toast.makeText(getContext(), "Lỗi khởi tạo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
     private void initializeViews(View view) {
-        tvTotalAmount = view.findViewById(R.id.tvTotalAmount);
+        recyclerViewGoals = view.findViewById(R.id.recyclerViewGoals);
         progressBarTotal = view.findViewById(R.id.progressBarTotal);
+        tvTotalAmount = view.findViewById(R.id.tvTotalAmount);
         emptyView = view.findViewById(R.id.emptyView);
-    }
+        fabAddGoal = view.findViewById(R.id.fabAddGoal);
 
-    private void setupRecyclerView(View view) {
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerViewGoals);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new GoalAdapter(this);
-        recyclerView.setAdapter(adapter);
-        // Tối ưu hóa RecyclerView
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setItemViewCacheSize(20);
-    }
-
-    private void setupFabButton(View view) {
-        FloatingActionButton fabAddGoal = view.findViewById(R.id.fabAddGoal);
+        // Thiết lập sự kiện click cho FAB
         fabAddGoal.setOnClickListener(v -> showAddGoalDialog());
     }
 
-    private void observeViewModel() {
-        // Quan sát danh sách mục tiêu
+    private void setupFirebase() {
+        mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            userId = currentUser.getUid();
+        }
+    }
+
+    private void setupRecyclerView() {
+        recyclerViewGoals.setLayoutManager(new LinearLayoutManager(getContext()));
+        goalAdapter = new GoalAdapter(this);
+        recyclerViewGoals.setAdapter(goalAdapter);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setupViewModel();
+        loadData();
+    }
+
+    private void setupViewModel() {
+        viewModel = new ViewModelProvider(this).get(GoalViewModel.class);
+
+        // Observe goals LiveData
         viewModel.getGoals().observe(getViewLifecycleOwner(), this::updateUI);
 
-        // Quan sát thông báo lỗi
-        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), errorMessage -> {
-            if (errorMessage != null && !errorMessage.isEmpty() && getContext() != null) {
-                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+        // Observe error messages
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), message -> {
+            if (message != null && !message.isEmpty()) {
+                showToast(message);
             }
         });
     }
 
-    private void loadIncomeData() {
+    private void loadData() {
+        loadWalletBalance();
+    }
+
+    private void loadWalletBalance() {
         if (userId == null) return;
 
-        mDatabase.child("transactions").child(userId).addValueEventListener(new ValueEventListener() {
+        mDatabase.child("wallets").child(userId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                totalIncome = 0;
+                totalBalance = 0;
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     try {
-                        // Lấy giá trị amount từ transaction
-                        Long amount = snapshot.child("amount").getValue(Long.class);
-                        if (amount != null && amount > 0) {
-                            // Chỉ tính các giao dịch có amount > 0 (thu nhập)
-                            totalIncome += amount;
+                        // Lấy giá trị balance từ wallet
+                        Long balance = snapshot.child("balance").getValue(Long.class);
+                        if (balance != null) {
+                            // Cộng dồn số dư của tất cả các ví
+                            totalBalance += balance;
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Error parsing transaction", e);
+                        Log.e(TAG, "Error parsing wallet", e);
                     }
                 }
 
-                // Cập nhật lại UI sau khi có dữ liệu thu nhập mới
+                // Cập nhật adapter với tổng số dư mới
+                if (goalAdapter != null) {
+                    goalAdapter.setTotalIncome(totalBalance);
+                }
+
+                // Cập nhật lại UI sau khi có dữ liệu số dư mới
                 if (viewModel.getGoals().getValue() != null) {
                     updateUI(viewModel.getGoals().getValue());
                 }
@@ -161,41 +159,44 @@ public class LapKeHoach extends Fragment implements GoalAdapter.OnGoalClickListe
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e(TAG, "Database error: " + databaseError.getMessage());
-                if (getContext() != null) {
-                    Toast.makeText(getContext(), "Lỗi tải dữ liệu thu nhập: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                }
+                showToast("Lỗi tải dữ liệu số dư: " + databaseError.getMessage());
             }
         });
     }
 
     private void updateUI(List<Goal> goals) {
-        // Cập nhật adapter với thu nhập
-        adapter.submitList(goals);
-        adapter.setTotalIncome(totalIncome);
+        // Cập nhật adapter
+        goalAdapter.submitList(goals);
 
-        // Hiển thị view "không có dữ liệu" nếu danh sách trống
-        if (emptyView != null) {
-            emptyView.setVisibility(goals.isEmpty() ? View.VISIBLE : View.GONE);
+        // Hiển thị emptyView nếu không có mục tiêu
+        if (goals == null || goals.isEmpty()) {
+            emptyView.setVisibility(View.VISIBLE);
+            recyclerViewGoals.setVisibility(View.GONE);
+        } else {
+            emptyView.setVisibility(View.GONE);
+            recyclerViewGoals.setVisibility(View.VISIBLE);
         }
 
-        // Cập nhật tổng thu nhập và tiến độ
-        updateTotalIncome(goals);
+        // Cập nhật tổng số dư và thanh tiến độ
+        updateTotalBalance(goals);
     }
 
-    private void updateTotalIncome(List<Goal> goals) {
-        // Format số tiền thu nhập
-        tvTotalAmount.setText(CURRENCY_FORMAT.format(totalIncome) + " VND");
+    private void updateTotalBalance(List<Goal> goals) {
+        // Format số tiền tổng số dư
+        tvTotalAmount.setText(CURRENCY_FORMAT.format(totalBalance));
 
         // Tính tổng mục tiêu
         long totalTarget = 0;
-        for (Goal goal : goals) {
-            totalTarget += goal.getTargetAmount();
+        if (goals != null) {
+            for (Goal goal : goals) {
+                totalTarget += goal.getTargetAmount();
+            }
         }
 
-        // Cập nhật thanh tiến độ dựa trên thu nhập
+        // Cập nhật thanh tiến độ dựa trên số dư
         int progress;
         if (totalTarget > 0) {
-            progress = (int) ((totalIncome * 100) / totalTarget);
+            progress = (int) ((totalBalance * 100) / totalTarget);
         } else {
             progress = 0;
         }
@@ -203,47 +204,74 @@ public class LapKeHoach extends Fragment implements GoalAdapter.OnGoalClickListe
         progressBarTotal.setProgress(Math.min(progress, 100));
     }
 
+    // Hiển thị dialog thêm mục tiêu mới
     private void showAddGoalDialog() {
-        ThemmoiFragment themmoiFragment = new ThemmoiFragment();
-        themmoiFragment.setGoalAddListener((name, amount, goalType) ->
-                viewModel.addGoal(name, amount, goalType)
-        );
-        themmoiFragment.show(getParentFragmentManager(), "ThemmoiFragment");
+        ThemmoiFragment dialog = new ThemmoiFragment();
+        dialog.setGoalAddListener(this);
+        dialog.show(getChildFragmentManager(), "ThemmoiFragment");
     }
 
+    // Hiển thị dialog chỉnh sửa mục tiêu
+    private void showEditGoalDialog(String goalId, String name, String amount) {
+        SuamuctieuFragment dialog = SuamuctieuFragment.newInstance(goalId, name, amount);
+        dialog.setGoalUpdateListener(this);
+        dialog.show(getChildFragmentManager(), "SuamuctieuFragment");
+    }
+
+    // Hiển thị dialog xác nhận xóa mục tiêu
+    private void confirmDeleteGoal(String goalId) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận xóa")
+                .setMessage("Bạn có chắc chắn muốn xóa mục tiêu này?")
+                .setPositiveButton("Xóa", (dialog, which) -> viewModel.deleteGoal(goalId))
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    // Hiển thị menu tùy chọn cho mục tiêu
+    private void showGoalOptionsMenu(Goal goal) {
+        MenuLapKeHoachFragment dialog = MenuLapKeHoachFragment.newInstance(
+                goal.getId(),
+                goal.getName(),
+                String.valueOf(goal.getTargetAmount())
+        );
+        dialog.setGoalActionListener(this);
+        dialog.show(getChildFragmentManager(), "MenuLapKeHoachFragment");
+    }
+
+    // Hiển thị thông báo Toast
+    private void showToast(String message) {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Implement GoalAdapter.OnGoalClickListener
     @Override
     public void onGoalClick(Goal goal) {
-        // Hiển thị menu tùy chọn khi nhấn vào mục tiêu
-        MenuLapKeHoachFragment menuFragment = MenuLapKeHoachFragment.newInstance(
-                goal.getId(), goal.getName(), String.valueOf(goal.getTargetAmount()));
-
-        menuFragment.setGoalActionListener(new MenuLapKeHoachFragment.GoalActionListener() {
-            @Override
-            public void onEditGoal(String goalId, String name, String amount) {
-                showEditGoalDialog(goalId, name, amount);
-            }
-
-            @Override
-            public void onDeleteGoal(String goalId) {
-                viewModel.deleteGoal(goalId);
-            }
-        });
-
-        menuFragment.show(getParentFragmentManager(), "MenuLapKeHoachFragment");
+        showGoalOptionsMenu(goal);
     }
 
-    private void showEditGoalDialog(String goalId, String name, String amount) {
-        SuamuctieuFragment suamuctieuFragment = SuamuctieuFragment.newInstance(goalId, name, amount);
-        suamuctieuFragment.setGoalUpdateListener((goalId1, name1, amount1) ->
-                viewModel.updateGoal(goalId1, name1, amount1)
-        );
-        suamuctieuFragment.show(getParentFragmentManager(), "SuamuctieuFragment");
+    // Implement MenuLapKeHoachFragment.GoalActionListener
+    @Override
+    public void onEditGoal(String goalId, String name, String amount) {
+        showEditGoalDialog(goalId, name, amount);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        // Tải lại dữ liệu khi quay lại fragment
-        loadIncomeData();
+    public void onDeleteGoal(String goalId) {
+        confirmDeleteGoal(goalId);
+    }
+
+    // Implement ThemmoiFragment.GoalAddListener
+    @Override
+    public void onGoalAdded(String name, long amount, String goalType) {
+        viewModel.addGoal(name, amount, goalType);
+    }
+
+    // Implement SuamuctieuFragment.GoalUpdateListener
+    @Override
+    public void onGoalUpdated(String goalId, String name, long amount) {
+        viewModel.updateGoal(goalId, name, amount);
     }
 }
