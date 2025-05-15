@@ -28,10 +28,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class HoSo extends Fragment {
+public class HoSo extends Fragment implements ProfileUpdateListener {
 
     private static final String TAG = "HoSoFragment";
     private static final int REQUEST_EDIT_PROFILE = 1001;
+
+    // Các khóa cho Firebase Database
+    private static final String USERS_PATH = "users";
+    private static final String FULL_NAME_KEY = "fullName";
+    private static final String USERNAME_KEY = "username";
+    private static final String NOTIFICATIONS_ENABLED_KEY = "notificationsEnabled";
+    private static final String LANGUAGE_KEY = "language";
 
     // UI components
     private TextView tvUsername, tvEmail, tvAppVersion;
@@ -44,10 +51,6 @@ public class HoSo extends Fragment {
     private DatabaseReference mDatabase;
     private FirebaseUser currentUser;
 
-    public HoSo() {
-        // Required empty public constructor
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +60,6 @@ public class HoSo extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_hoso, container, false);
     }
 
@@ -75,6 +77,10 @@ public class HoSo extends Fragment {
             mAuth = FirebaseAuth.getInstance();
             mDatabase = FirebaseDatabase.getInstance().getReference();
             currentUser = mAuth.getCurrentUser();
+
+            if (currentUser == null) {
+                navigateToLogin();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Firebase initialization error", e);
             showToast("Lỗi khởi tạo Firebase: " + e.getMessage());
@@ -91,7 +97,11 @@ public class HoSo extends Fragment {
         cardLanguage = view.findViewById(R.id.cardLanguage);
         switchNotifications = view.findViewById(R.id.switchNotifications);
 
-        // Set app version with proper exception handling
+        // Set app version
+        setAppVersion();
+    }
+
+    private void setAppVersion() {
         try {
             String versionName = getContext().getPackageManager()
                     .getPackageInfo(getContext().getPackageName(), 0).versionName;
@@ -104,16 +114,11 @@ public class HoSo extends Fragment {
 
     private void setupListeners() {
         btnLogout.setOnClickListener(v -> showLogoutConfirmationDialog());
-
         cardEditProfile.setOnClickListener(v -> navigateToEditProfile());
-
         cardChangePassword.setOnClickListener(v -> navigateToChangePassword());
-
         cardLanguage.setOnClickListener(v -> showLanguageSelectionDialog());
-
-        switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            updateNotificationPreference(isChecked);
-        });
+        switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) ->
+                updateNotificationPreference(isChecked));
     }
 
     private void loadUserData() {
@@ -126,7 +131,7 @@ public class HoSo extends Fragment {
         tvEmail.setText(currentUser.getEmail());
 
         // Load additional user data from Realtime Database
-        mDatabase.child("users").child(currentUser.getUid())
+        mDatabase.child(USERS_PATH).child(currentUser.getUid())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -145,15 +150,14 @@ public class HoSo extends Fragment {
                 });
     }
 
-    // Thêm phương thức mới để cập nhật hiển thị người dùng
     private void updateUserDisplay(DataSnapshot dataSnapshot) {
         // Ưu tiên hiển thị Họ Tên nếu có
-        String fullName = dataSnapshot.child("fullName").getValue(String.class);
+        String fullName = dataSnapshot.child(FULL_NAME_KEY).getValue(String.class);
         if (fullName != null && !fullName.isEmpty()) {
             tvUsername.setText(fullName);
         } else {
             // Nếu không có Họ Tên, hiển thị Username
-            String username = dataSnapshot.child("username").getValue(String.class);
+            String username = dataSnapshot.child(USERNAME_KEY).getValue(String.class);
             if (username != null && !username.isEmpty()) {
                 tvUsername.setText(username);
             } else {
@@ -162,7 +166,7 @@ public class HoSo extends Fragment {
         }
 
         // Get notification preference
-        Boolean notificationsEnabled = dataSnapshot.child("notificationsEnabled").getValue(Boolean.class);
+        Boolean notificationsEnabled = dataSnapshot.child(NOTIFICATIONS_ENABLED_KEY).getValue(Boolean.class);
         if (notificationsEnabled != null) {
             switchNotifications.setChecked(notificationsEnabled);
         }
@@ -224,8 +228,8 @@ public class HoSo extends Fragment {
 
     private void updateNotificationPreference(boolean enabled) {
         if (currentUser != null) {
-            mDatabase.child("users").child(currentUser.getUid())
-                    .child("notificationsEnabled").setValue(enabled)
+            mDatabase.child(USERS_PATH).child(currentUser.getUid())
+                    .child(NOTIFICATIONS_ENABLED_KEY).setValue(enabled)
                     .addOnSuccessListener(aVoid -> {
                         Log.d(TAG, "Notification preference updated");
                     })
@@ -240,8 +244,8 @@ public class HoSo extends Fragment {
 
     private void saveLanguagePreference(String language) {
         if (currentUser != null) {
-            mDatabase.child("users").child(currentUser.getUid())
-                    .child("language").setValue(language)
+            mDatabase.child(USERS_PATH).child(currentUser.getUid())
+                    .child(LANGUAGE_KEY).setValue(language)
                     .addOnSuccessListener(aVoid -> {
                         Log.d(TAG, "Language preference updated");
                     })
@@ -258,8 +262,8 @@ public class HoSo extends Fragment {
 
         if (requestCode == REQUEST_EDIT_PROFILE && resultCode == EditProfileActivity.RESULT_PROFILE_UPDATED) {
             // Cập nhật UI ngay lập tức với dữ liệu mới
-            if (data != null && data.hasExtra("fullName")) {
-                String newFullName = data.getStringExtra("fullName");
+            if (data != null && data.hasExtra(FULL_NAME_KEY)) {
+                String newFullName = data.getStringExtra(FULL_NAME_KEY);
                 tvUsername.setText(newFullName);
             } else {
                 // Nếu không có dữ liệu trả về, tải lại từ Firebase
@@ -269,6 +273,13 @@ public class HoSo extends Fragment {
     }
 
     private void showToast(String message) {
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        if (getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onProfileUpdated() {
+        loadUserData();
     }
 }

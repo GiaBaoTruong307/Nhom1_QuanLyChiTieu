@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -17,13 +16,15 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import java.util.Objects;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class ChangePasswordActivity extends AppCompatActivity {
 
     private static final String TAG = "ChangePasswordActivity";
     private static final int MIN_PASSWORD_LENGTH = 6;
+    private static final String USERS_PATH = "users";
+    private static final String PASSWORD_KEY = "password";
 
     // UI components
     private EditText etCurrentPassword, etNewPassword, etConfirmPassword;
@@ -32,6 +33,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
     // Firebase components
     private FirebaseUser currentUser;
+    private DatabaseReference userRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +54,14 @@ public class ChangePasswordActivity extends AppCompatActivity {
             currentUser = mAuth.getCurrentUser();
 
             if (currentUser == null) {
+                showToast("Bạn cần đăng nhập để thực hiện chức năng này");
                 finish();
                 return false;
             }
+
+            userRef = FirebaseDatabase.getInstance().getReference()
+                    .child(USERS_PATH)
+                    .child(currentUser.getUid());
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Firebase initialization error", e);
@@ -84,7 +91,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Thiết lập sự kiện cho các nút hiển thị/ẩn mật khẩu
         btnToggleCurrentPassword.setOnClickListener(v -> togglePasswordVisibility(etCurrentPassword, btnToggleCurrentPassword));
         btnToggleNewPassword.setOnClickListener(v -> togglePasswordVisibility(etNewPassword, btnToggleNewPassword));
         btnToggleConfirmPassword.setOnClickListener(v -> togglePasswordVisibility(etConfirmPassword, btnToggleConfirmPassword));
@@ -167,9 +173,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
     private void updatePassword(String newPassword) {
         currentUser.updatePassword(newPassword)
                 .addOnSuccessListener(aVoid -> {
-                    progressDialog.dismiss();
-                    showToast("Đổi mật khẩu thành công");
-                    finish();
+                    // Cập nhật mật khẩu trong Realtime Database
+                    updatePasswordInDatabase(newPassword);
                 })
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
@@ -178,13 +183,19 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 });
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    private void updatePasswordInDatabase(String newPassword) {
+        userRef.child(PASSWORD_KEY).setValue(newPassword)
+                .addOnSuccessListener(aVoid -> {
+                    progressDialog.dismiss();
+                    showToast("Đổi mật khẩu thành công");
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    progressDialog.dismiss();
+                    showToast("Đổi mật khẩu thành công nhưng không thể cập nhật cơ sở dữ liệu");
+                    Log.e(TAG, "Database password update failed", e);
+                    finish();
+                });
     }
 
     private void showToast(String message) {

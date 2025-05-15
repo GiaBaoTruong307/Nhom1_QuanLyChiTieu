@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -12,7 +11,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import com.example.nhom1_quanlychitieu.R;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,12 +27,12 @@ import java.util.Map;
 public class EditProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "EditProfileActivity";
+    public static final int RESULT_PROFILE_UPDATED = 100;
+
+    // Các khóa cho Firebase Database
     private static final String USERS_PATH = "users";
     private static final String FULL_NAME_KEY = "fullName";
     private static final String PHONE_NUMBER_KEY = "phoneNumber";
-
-    // Thêm mã kết quả
-    public static final int RESULT_PROFILE_UPDATED = 100;
 
     // UI components
     private EditText etFullName, etPhoneNumber;
@@ -63,12 +61,14 @@ public class EditProfileActivity extends AppCompatActivity {
             currentUser = mAuth.getCurrentUser();
 
             if (currentUser == null) {
+                showToast("Bạn cần đăng nhập để thực hiện chức năng này");
                 finish();
                 return false;
             }
 
-            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-            userRef = mDatabase.child(USERS_PATH).child(currentUser.getUid());
+            userRef = FirebaseDatabase.getInstance().getReference()
+                    .child(USERS_PATH)
+                    .child(currentUser.getUid());
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Firebase initialization error", e);
@@ -79,7 +79,6 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
         etFullName = findViewById(R.id.etFullName);
         etPhoneNumber = findViewById(R.id.etPhoneNumber);
         Button btnSave = findViewById(R.id.btnSave);
@@ -156,15 +155,6 @@ public class EditProfileActivity extends AppCompatActivity {
                     Log.e(TAG, "Error updating profile", e);
                     showToast("Lỗi cập nhật thông tin: " + e.getMessage());
                 });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void showToast(String message) {
