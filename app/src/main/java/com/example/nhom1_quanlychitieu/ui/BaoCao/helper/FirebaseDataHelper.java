@@ -13,10 +13,12 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +28,7 @@ public class FirebaseDataHelper {
     private static final String TAG = "FirebaseDataHelper";
     private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
     private final FirebaseFirestore db;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     // Mảng màu sắc cho các danh mục
     private static final int[] CATEGORY_COLORS = {
@@ -36,35 +39,38 @@ public class FirebaseDataHelper {
             Color.parseColor("#66BB6A"),  // Green
             Color.parseColor("#FFC107"),  // Yellow
             Color.parseColor("#8D6E63"),  // Brown
-            Color.parseColor("#26A69A")   // Teal
+            Color.parseColor("#26A69A"),  // Teal
+            Color.parseColor("#EF5350"),  // Red
+            Color.parseColor("#7E57C2"),  // Deep Purple
+            Color.parseColor("#29B6F6"),  // Light Blue
+            Color.parseColor("#26C6DA"),  // Cyan
+            Color.parseColor("#9CCC65"),  // Light Green
+            Color.parseColor("#FFEE58"),  // Yellow
+            Color.parseColor("#FF7043"),  // Deep Orange
+            Color.parseColor("#78909C")   // Blue Grey
     };
 
     public FirebaseDataHelper() {
         this.db = FirebaseFirestore.getInstance();
     }
 
-    // Lấy tổng chi tiêu theo tháng và năm
-    public void getTotalExpense(int month, int year, final OnTotalLoadedListener listener) {
-        String startDate = String.format(Locale.US, "%04d-%02d-01", year, month);
-        String endDate;
-
-        if (month == 12) {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year + 1, 1);
-        } else {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year, month + 1);
-        }
+    // Lấy tổng chi tiêu theo khoảng thời gian
+    public void getTotalExpenseByDateRange(String startDate, String endDate, final OnTotalLoadedListener listener) {
+        Log.d(TAG, "Fetching expenses from " + startDate + " to " + endDate);
 
         db.collection("giaodich")
                 .whereEqualTo("loaigiaodich", "chi")
                 .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThan("ngaygiaodich", endDate)
+                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             long total = 0;
+                            int count = 0;
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                count++;
                                 if (document.contains("sotien")) {
                                     Long amount = document.getLong("sotien");
                                     if (amount != null) {
@@ -72,37 +78,33 @@ public class FirebaseDataHelper {
                                     }
                                 }
                             }
+                            Log.d(TAG, "Found " + count + " expense transactions, total: " + total);
                             listener.onTotalLoaded(total);
                         } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
+                            Log.w(TAG, "Error getting expense documents: ", task.getException());
                             listener.onTotalLoaded(0);
                         }
                     }
                 });
     }
 
-    // Lấy tổng thu nhập theo tháng và năm
-    public void getTotalIncome(int month, int year, final OnTotalLoadedListener listener) {
-        String startDate = String.format(Locale.US, "%04d-%02d-01", year, month);
-        String endDate;
-
-        if (month == 12) {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year + 1, 1);
-        } else {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year, month + 1);
-        }
+    // Lấy tổng thu nhập theo khoảng thời gian
+    public void getTotalIncomeByDateRange(String startDate, String endDate, final OnTotalLoadedListener listener) {
+        Log.d(TAG, "Fetching income from " + startDate + " to " + endDate);
 
         db.collection("giaodich")
                 .whereEqualTo("loaigiaodich", "thu")
                 .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThan("ngaygiaodich", endDate)
+                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             long total = 0;
+                            int count = 0;
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                count++;
                                 if (document.contains("sotien")) {
                                     Long amount = document.getLong("sotien");
                                     if (amount != null) {
@@ -110,40 +112,40 @@ public class FirebaseDataHelper {
                                     }
                                 }
                             }
+                            Log.d(TAG, "Found " + count + " income transactions, total: " + total);
                             listener.onTotalLoaded(total);
                         } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
+                            Log.w(TAG, "Error getting income documents: ", task.getException());
                             listener.onTotalLoaded(0);
                         }
                     }
                 });
     }
 
-    // Lấy danh sách chi tiêu theo danh mục
-    public void getExpenseByCategories(int month, int year, final OnCategoriesLoadedListener listener) {
-        String startDate = String.format(Locale.US, "%04d-%02d-01", year, month);
-        String endDate;
-
-        if (month == 12) {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year + 1, 1);
-        } else {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year, month + 1);
-        }
+    // Lấy danh sách chi tiêu theo khoảng thời gian
+    public void getExpenseByDateRange(String startDate, String endDate, final OnCategoriesLoadedListener listener) {
+        Log.d(TAG, "Fetching expense categories from " + startDate + " to " + endDate);
 
         db.collection("giaodich")
                 .whereEqualTo("loaigiaodich", "chi")
                 .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThan("ngaygiaodich", endDate)
+                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             Map<String, Long> categoryMap = new HashMap<>();
+                            int count = 0;
 
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                count++;
                                 String categoryName = document.getString("tendanhmuc");
                                 Long amount = document.getLong("sotien");
+
+                                Log.d(TAG, "Document ID: " + document.getId() +
+                                        ", Category: " + categoryName +
+                                        ", Amount: " + amount);
 
                                 if (categoryName != null && amount != null) {
                                     if (categoryMap.containsKey(categoryName)) {
@@ -153,6 +155,9 @@ public class FirebaseDataHelper {
                                     }
                                 }
                             }
+
+                            Log.d(TAG, "Processed " + count + " expense documents, found " +
+                                    categoryMap.size() + " unique categories");
 
                             List<CategoryData> categoryDataList = new ArrayList<>();
                             int colorIndex = 0;
@@ -174,38 +179,37 @@ public class FirebaseDataHelper {
 
                             listener.onCategoriesLoaded(categoryDataList);
                         } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
+                            Log.w(TAG, "Error getting expense category documents: ", task.getException());
                             listener.onCategoriesLoaded(new ArrayList<>());
                         }
                     }
                 });
     }
 
-    // Lấy danh sách thu nhập theo danh mục
-    public void getIncomeByCategories(int month, int year, final OnCategoriesLoadedListener listener) {
-        String startDate = String.format(Locale.US, "%04d-%02d-01", year, month);
-        String endDate;
-
-        if (month == 12) {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year + 1, 1);
-        } else {
-            endDate = String.format(Locale.US, "%04d-%02d-01", year, month + 1);
-        }
+    // Lấy danh sách thu nhập theo khoảng thời gian
+    public void getIncomeByDateRange(String startDate, String endDate, final OnCategoriesLoadedListener listener) {
+        Log.d(TAG, "Fetching income categories from " + startDate + " to " + endDate);
 
         db.collection("giaodich")
                 .whereEqualTo("loaigiaodich", "thu")
                 .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThan("ngaygiaodich", endDate)
+                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             Map<String, Long> categoryMap = new HashMap<>();
+                            int count = 0;
 
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                count++;
                                 String categoryName = document.getString("tendanhmuc");
                                 Long amount = document.getLong("sotien");
+
+                                Log.d(TAG, "Document ID: " + document.getId() +
+                                        ", Category: " + categoryName +
+                                        ", Amount: " + amount);
 
                                 if (categoryName != null && amount != null) {
                                     if (categoryMap.containsKey(categoryName)) {
@@ -215,6 +219,9 @@ public class FirebaseDataHelper {
                                     }
                                 }
                             }
+
+                            Log.d(TAG, "Processed " + count + " income documents, found " +
+                                    categoryMap.size() + " unique categories");
 
                             List<CategoryData> categoryDataList = new ArrayList<>();
                             int colorIndex = 0;
@@ -236,7 +243,7 @@ public class FirebaseDataHelper {
 
                             listener.onCategoriesLoaded(categoryDataList);
                         } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
+                            Log.w(TAG, "Error getting income category documents: ", task.getException());
                             listener.onCategoriesLoaded(new ArrayList<>());
                         }
                     }

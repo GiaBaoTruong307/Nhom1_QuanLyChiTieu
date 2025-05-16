@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,7 +17,6 @@ public class BaoCao extends Fragment {
 
     private TextView tabExpense, tabIncome;
     private View indicatorExpense, indicatorIncome;
-    private ImageButton btnBack;
     private Fragment currentFragment;
 
     @Nullable
@@ -32,18 +30,10 @@ public class BaoCao extends Fragment {
         tabIncome = rootView.findViewById(R.id.tabIncome);
         indicatorExpense = rootView.findViewById(R.id.indicatorExpense);
         indicatorIncome = rootView.findViewById(R.id.indicatorIncome);
-        btnBack = rootView.findViewById(R.id.btnBack);
 
         // Set click listeners for tabs
         tabExpense.setOnClickListener(v -> switchToTab(true));
         tabIncome.setOnClickListener(v -> switchToTab(false));
-
-        // Sử dụng cách an toàn hơn để xử lý nút back
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().onBackPressed();
-            }
-        });
 
         // Load default fragment
         if (savedInstanceState == null) {

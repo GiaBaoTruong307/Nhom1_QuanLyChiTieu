@@ -23,6 +23,15 @@
         android:textSize="16sp" />
 
     <TextView
+        android:id="@+id/categoryPercentage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:text="50%"
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
+
+    <TextView
         android:id="@+id/categoryAmount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

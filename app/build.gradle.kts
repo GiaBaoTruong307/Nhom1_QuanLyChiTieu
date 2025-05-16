@@ -70,9 +70,6 @@ dependencies {
     implementation ("com.google.firebase:firebase-auth")
     implementation ("com.google.firebase:firebase-database")
 
-    // MPAndroidChart - Đảm bảo phiên bản tương thích
-    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
-
     // Core KTX và Fragment
     implementation ("androidx.core:core-ktx:1.12.0")
     implementation ("androidx.fragment:fragment:1.6.2")
@@ -80,12 +77,15 @@ dependencies {
     // CircleImageView cho avatar tròn
     implementation ("de.hdodenhof:circleimageview:3.1.0")
 
-    // Thêm Firebase Firestore
-    implementation ("com.google.firebase:firebase-firestore")
-
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation ("androidx.viewpager2:viewpager2:1.0.0")
     implementation ("com.google.android.material:material:1.4.0")
+
+    // MPAndroidChart for pie charts
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Firebase Firestore
+    implementation ("com.google.firebase:firebase-firestore:24.6.1")
 
 }

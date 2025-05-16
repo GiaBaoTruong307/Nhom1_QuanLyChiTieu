@@ -33,73 +33,70 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/labelIncome" />
 
-    <!-- Monthly Statistics Label -->
+    <!-- Date Range Label -->
     <TextView
-        android:id="@+id/labelMonthlyStats"
+        android:id="@+id/labelDateRange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="32dp"
-        android:text="Thống kê thu nhập theo tháng"
+        android:text="Khoảng thời gian"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/valueIncome" />
 
-    <!-- Filter Buttons -->
+    <!-- Date Range Buttons -->
     <LinearLayout
-        android:id="@+id/filterButtons"
-        android:layout_width="wrap_content"
+        android:id="@+id/dateRangeButtons"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="24dp"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/labelMonthlyStats">
+        app:layout_constraintTop_toBottomOf="@id/labelDateRange">
 
-        <!-- Monthly Button -->
+        <!-- Start Date Button -->
         <Button
-            android:id="@+id/btnMonthly"
-            android:layout_width="wrap_content"
+            android:id="@+id/btnStartDate"
+            android:layout_width="0dp"
             android:layout_height="36dp"
-            android:layout_marginEnd="4dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
             android:background="#444444"
-            android:drawableEnd="@drawable/baocao_ic_baocao_dropdown"
             android:paddingHorizontal="12dp"
-            android:text="Tháng 5"
+            android:text="01/05/2024"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="14sp" />
 
-        <!-- Year Button -->
+        <!-- End Date Button -->
         <Button
-            android:id="@+id/btnYear"
-            android:layout_width="wrap_content"
+            android:id="@+id/btnEndDate"
+            android:layout_width="0dp"
             android:layout_height="36dp"
+            android:layout_weight="1"
             android:background="#444444"
-            android:drawableEnd="@drawable/baocao_ic_baocao_dropdown"
             android:paddingHorizontal="12dp"
-            android:text="2024"
+            android:text="31/05/2024"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="14sp" />
     </LinearLayout>
 
-    <!-- Donut Chart Container -->
-    <FrameLayout
-        android:id="@+id/chartContainer"
-        android:layout_width="240dp"
-        android:layout_height="240dp"
-        android:layout_marginTop="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/filterButtons">
-
-        <com.github.mikephil.charting.charts.PieChart
-            android:id="@+id/donutChart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </FrameLayout>
+    <!-- Apply Filter Button -->
+    <Button
+        android:id="@+id/btnApplyFilter"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="8dp"
+        android:background="#6200EE"
+        android:text="Áp dụng"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/dateRangeButtons" />
 
     <!-- Category Comparison Label -->
     <TextView
@@ -107,12 +104,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:text="So sánh các loại thu nhập"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/chartContainer" />
+        app:layout_constraintTop_toBottomOf="@id/btnApplyFilter" />
 
     <!-- Category List -->
     <ScrollView

@@ -1,14 +1,16 @@
 package com.example.nhom1_quanlychitieu.ui.BaoCao;
 
+import android.app.DatePickerDialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,27 +21,26 @@ import androidx.fragment.app.Fragment;
 import com.example.nhom1_quanlychitieu.R;
 import com.example.nhom1_quanlychitieu.ui.BaoCao.helper.FirebaseDataHelper;
 import com.example.nhom1_quanlychitieu.ui.BaoCao.model.CategoryData;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.PercentFormatter;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class ExpenseFragment extends Fragment {
+    private static final String TAG = "ExpenseFragment";
 
-    private PieChart donutChart;
-    private Button btnMonthly, btnYear;
+    private Button btnStartDate, btnEndDate, btnApplyFilter;
     private TextView valueExpense;
     private LinearLayout categoryList;
     private FirebaseDataHelper dataHelper;
     private View loadingView;
 
-    private int currentMonth;
-    private int currentYear;
+    private Calendar startDateCalendar;
+    private Calendar endDateCalendar;
     private boolean isDataLoading = false;
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    private SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     @Nullable
     @Override
@@ -47,9 +48,9 @@ public class ExpenseFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_baocao_chitieu, container, false);
 
         // Initialize views
-        donutChart = view.findViewById(R.id.donutChart);
-        btnMonthly = view.findViewById(R.id.btnMonthly);
-        btnYear = view.findViewById(R.id.btnYear);
+        btnStartDate = view.findViewById(R.id.btnStartDate);
+        btnEndDate = view.findViewById(R.id.btnEndDate);
+        btnApplyFilter = view.findViewById(R.id.btnApplyFilter);
         valueExpense = view.findViewById(R.id.valueExpense);
         categoryList = view.findViewById(R.id.categoryList);
         loadingView = view.findViewById(R.id.loadingView);
@@ -57,20 +58,22 @@ public class ExpenseFragment extends Fragment {
         // Initialize data helper
         dataHelper = new FirebaseDataHelper();
 
-        // Get current month and year
-        currentMonth = dataHelper.getCurrentMonth();
-        currentYear = dataHelper.getCurrentYear();
+        // Initialize date calendars
+        startDateCalendar = Calendar.getInstance();
+        endDateCalendar = Calendar.getInstance();
 
-        // Set initial button text
-        btnMonthly.setText("Tháng " + currentMonth);
-        btnYear.setText(String.valueOf(currentYear));
+        // Set start date to first day of current month
+        startDateCalendar.set(Calendar.DAY_OF_MONTH, 1);
 
-        // Set up click listeners for filter buttons
-        btnMonthly.setOnClickListener(v -> showDropdownMenu(v, true));
-        btnYear.setOnClickListener(v -> showDropdownMenu(v, false));
+        // Update button text
+        updateDateButtonsText();
 
-        // Configure chart appearance
-        configureChart();
+        // Set up click listeners for date buttons
+        btnStartDate.setOnClickListener(v -> showDatePicker(true));
+        btnEndDate.setOnClickListener(v -> showDatePicker(false));
+
+        // Set up click listener for apply filter button
+        btnApplyFilter.setOnClickListener(v -> loadData());
 
         // Load data
         loadData();
@@ -78,19 +81,43 @@ public class ExpenseFragment extends Fragment {
         return view;
     }
 
-    private void configureChart() {
-        // Configure the chart appearance
-        donutChart.setDrawHoleEnabled(true);
-        donutChart.setHoleRadius(70f);
-        donutChart.setTransparentCircleRadius(0f);
-        donutChart.setDrawCenterText(false);
-        donutChart.setDrawEntryLabels(false);
-        donutChart.getDescription().setEnabled(false);
-        donutChart.setRotationEnabled(false);
-        donutChart.setHighlightPerTapEnabled(false);
-        donutChart.getLegend().setEnabled(false);
-        donutChart.setTouchEnabled(false);
-        donutChart.setHoleColor(Color.parseColor("#121418"));
+    private void updateDateButtonsText() {
+        btnStartDate.setText(dateFormat.format(startDateCalendar.getTime()));
+        btnEndDate.setText(dateFormat.format(endDateCalendar.getTime()));
+    }
+
+    private void showDatePicker(final boolean isStartDate) {
+        Calendar calendar = isStartDate ? startDateCalendar : endDateCalendar;
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                requireContext(),
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        if (isStartDate) {
+                            startDateCalendar.set(year, month, dayOfMonth);
+                            // Ensure start date is not after end date
+                            if (startDateCalendar.after(endDateCalendar)) {
+                                Toast.makeText(getContext(), "Ngày bắt đầu không thể sau ngày kết thúc", Toast.LENGTH_SHORT).show();
+                                startDateCalendar.setTime(endDateCalendar.getTime());
+                            }
+                        } else {
+                            endDateCalendar.set(year, month, dayOfMonth);
+                            // Ensure end date is not before start date
+                            if (endDateCalendar.before(startDateCalendar)) {
+                                Toast.makeText(getContext(), "Ngày kết thúc không thể trước ngày bắt đầu", Toast.LENGTH_SHORT).show();
+                                endDateCalendar.setTime(startDateCalendar.getTime());
+                            }
+                        }
+                        updateDateButtonsText();
+                    }
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        datePickerDialog.show();
     }
 
     private void loadData() {
@@ -106,14 +133,21 @@ public class ExpenseFragment extends Fragment {
             loadingView.setVisibility(View.VISIBLE);
         }
 
+        // Format dates for API
+        String startDate = apiDateFormat.format(startDateCalendar.getTime());
+        String endDate = apiDateFormat.format(endDateCalendar.getTime());
+
+        Log.d(TAG, "Loading expense data from " + startDate + " to " + endDate);
+
         // Get total expense
-        dataHelper.getTotalExpense(currentMonth, currentYear, new FirebaseDataHelper.OnTotalLoadedListener() {
+        dataHelper.getTotalExpenseByDateRange(startDate, endDate, new FirebaseDataHelper.OnTotalLoadedListener() {
             @Override
             public void onTotalLoaded(long total) {
                 if (getActivity() != null && isAdded()) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            Log.d(TAG, "Total expense loaded: " + total);
                             valueExpense.setText("-" + FirebaseDataHelper.formatCurrency(total));
                         }
                     });
@@ -122,14 +156,14 @@ public class ExpenseFragment extends Fragment {
         });
 
         // Get expense by categories
-        dataHelper.getExpenseByCategories(currentMonth, currentYear, new FirebaseDataHelper.OnCategoriesLoadedListener() {
+        dataHelper.getExpenseByDateRange(startDate, endDate, new FirebaseDataHelper.OnCategoriesLoadedListener() {
             @Override
             public void onCategoriesLoaded(List<CategoryData> categories) {
                 if (getActivity() != null && isAdded()) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            updateChart(categories);
+                            Log.d(TAG, "Categories loaded: " + categories.size());
                             updateCategoryList(categories);
 
                             if (loadingView != null) {
@@ -146,42 +180,17 @@ public class ExpenseFragment extends Fragment {
         });
     }
 
-    private void updateChart(List<CategoryData> categoryDataList) {
-        // Create data entries
-        List<PieEntry> entries = new ArrayList<>();
-        List<Integer> colors = new ArrayList<>();
-
-        for (CategoryData category : categoryDataList) {
-            entries.add(new PieEntry(category.getAmount(), category.getName()));
-            colors.add(category.getColor());
-        }
-
-        // If no data, add a placeholder
-        if (entries.isEmpty()) {
-            entries.add(new PieEntry(1, "Không có dữ liệu"));
-            colors.add(Color.GRAY);
-        }
-
-        // Create dataset
-        PieDataSet dataSet = new PieDataSet(entries, "");
-        dataSet.setColors(colors);
-        dataSet.setDrawValues(true);
-        dataSet.setValueTextSize(14f);
-        dataSet.setValueTextColor(Color.WHITE);
-        dataSet.setSliceSpace(0f);
-
-        // Create pie data
-        PieData data = new PieData(dataSet);
-        data.setValueFormatter(new PercentFormatter(donutChart));
-
-        // Set data to chart
-        donutChart.setData(data);
-        donutChart.invalidate();
-    }
-
     private void updateCategoryList(List<CategoryData> categoryDataList) {
         // Clear existing views
         categoryList.removeAllViews();
+
+        // Calculate total amount for percentage calculation
+        long totalAmount = 0;
+        for (CategoryData category : categoryDataList) {
+            totalAmount += category.getAmount();
+        }
+
+        Log.d(TAG, "Updating category list with " + categoryDataList.size() + " categories, total: " + totalAmount);
 
         // Add category items
         for (CategoryData category : categoryDataList) {
@@ -190,10 +199,17 @@ public class ExpenseFragment extends Fragment {
             View colorIndicator = categoryItem.findViewById(R.id.colorIndicator);
             TextView categoryName = categoryItem.findViewById(R.id.categoryName);
             TextView categoryAmount = categoryItem.findViewById(R.id.categoryAmount);
+            TextView categoryPercentage = categoryItem.findViewById(R.id.categoryPercentage);
+
+            // Calculate percentage
+            int percentage = totalAmount > 0 ? (int) ((category.getAmount() * 100) / totalAmount) : 0;
+
+            Log.d(TAG, "Category: " + category.getName() + ", Amount: " + category.getAmount() + ", Percentage: " + percentage + "%");
 
             colorIndicator.setBackgroundColor(category.getColor());
             categoryName.setText(category.getName());
             categoryAmount.setText(FirebaseDataHelper.formatCurrency(category.getAmount()));
+            categoryPercentage.setText(percentage + "%");
 
             categoryList.addView(categoryItem);
         }
@@ -201,95 +217,25 @@ public class ExpenseFragment extends Fragment {
         // If no data, show a message
         if (categoryDataList.isEmpty()) {
             TextView emptyText = new TextView(getContext());
-            emptyText.setText("Không có dữ liệu chi tiêu trong tháng này");
+            emptyText.setText("Không có dữ liệu chi tiêu trong khoảng thời gian này");
             emptyText.setTextColor(Color.WHITE);
             emptyText.setTextSize(16);
             emptyText.setGravity(Gravity.CENTER);
             emptyText.setPadding(0, 50, 0, 0);
 
+            Log.d(TAG, "No expense data found, showing empty message");
+
             categoryList.addView(emptyText);
         }
-    }
-
-    private void showDropdownMenu(View anchorView, boolean isMonthly) {
-        // Tránh hiển thị dropdown khi đang tải dữ liệu
-        if (isDataLoading) {
-            Toast.makeText(getContext(), "Đang tải dữ liệu, vui lòng đợi", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Inflate the dropdown layout
-        View popupView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_baocao_dropdown_menu, null);
-
-        // Create the popup window
-        int width = anchorView.getWidth();
-        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, true);
-
-        // Set up items in dropdown
-        TextView item1 = popupView.findViewById(R.id.item1);
-        TextView item2 = popupView.findViewById(R.id.item2);
-        TextView item3 = popupView.findViewById(R.id.item3);
-
-        if (isMonthly) {
-            item1.setText("Tháng 1");
-            item2.setText("Tháng 2");
-            item3.setText("Tháng 3");
-        } else {
-            item1.setText("2023");
-            item2.setText("2024");
-            item3.setText("2025");
-        }
-
-        // Set click listeners for items
-        item1.setOnClickListener(v -> {
-            if (isMonthly) {
-                btnMonthly.setText("Tháng 1");
-                currentMonth = 1;
-            } else {
-                btnYear.setText("2023");
-                currentYear = 2023;
-            }
-            loadData();
-            popupWindow.dismiss();
-        });
-
-        item2.setOnClickListener(v -> {
-            if (isMonthly) {
-                btnMonthly.setText("Tháng 2");
-                currentMonth = 2;
-            } else {
-                btnYear.setText("2024");
-                currentYear = 2024;
-            }
-            loadData();
-            popupWindow.dismiss();
-        });
-
-        item3.setOnClickListener(v -> {
-            if (isMonthly) {
-                btnMonthly.setText("Tháng 3");
-                currentMonth = 3;
-            } else {
-                btnYear.setText("2025");
-                currentYear = 2025;
-            }
-            loadData();
-            popupWindow.dismiss();
-        });
-
-        // Show the popup window
-        popupWindow.setBackgroundDrawable(null);
-        popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.START);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         // Đảm bảo không có memory leak
-        donutChart = null;
-        btnMonthly = null;
-        btnYear = null;
+        btnStartDate = null;
+        btnEndDate = null;
+        btnApplyFilter = null;
         valueExpense = null;
         categoryList = null;
         loadingView = null;
