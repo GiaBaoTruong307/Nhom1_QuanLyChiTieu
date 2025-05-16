@@ -3,6 +3,7 @@ package com.example.nhom1_quanlychitieu.ui.ThongKe.model;
 import java.io.Serializable;
 
 public class Transaction implements Serializable {
+    // Các thuộc tính của giao dịch
     private String id;
     private String category;
     private long amount;
@@ -12,7 +13,6 @@ public class Transaction implements Serializable {
     private String userId;
     private String categoryIconUrl;
 
-    // Constructor mặc định cần thiết cho Firebase
     public Transaction() {
     }
 
@@ -32,7 +32,7 @@ public class Transaction implements Serializable {
         this.userId = userId;
     }
 
-    // Getters và Setters
+    // Các phương thức getter và setter
     public String getId() {
         return id;
     }

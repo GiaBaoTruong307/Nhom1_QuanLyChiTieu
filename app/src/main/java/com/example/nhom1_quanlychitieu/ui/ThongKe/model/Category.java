@@ -3,15 +3,15 @@ package com.example.nhom1_quanlychitieu.ui.ThongKe.model;
 import java.io.Serializable;
 
 public class Category implements Serializable {
+    // Các thuộc tính của danh mục
     private String id;
     private String name;
     private String iconUrl;
     private String userId;
     private boolean isDefault;
-    private int iconResourceId; // Để lưu trữ ID resource của icon
-    private String type; // "expense" hoặc "income"
+    private int iconResourceId;
+    private String type;
 
-    // Constructor mặc định cần thiết cho Firebase
     public Category() {
     }
 
@@ -35,7 +35,7 @@ public class Category implements Serializable {
         this.type = type;
     }
 
-    // Getters và Setters
+    // Các phương thức getter và setter
     public String getId() {
         return id;
     }

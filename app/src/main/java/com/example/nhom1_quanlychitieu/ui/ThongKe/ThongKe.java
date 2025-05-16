@@ -46,12 +46,15 @@ import java.util.Locale;
 
 public class ThongKe extends Fragment implements BottomNavigationView.OnNavigationItemSelectedListener {
 
+    // TAG dùng cho logging
     private static final String TAG = "ThongKe";
+
+    // Các định dạng ngày tháng và số tiền
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
     private static final SimpleDateFormat DAY_OF_WEEK_FORMAT = new SimpleDateFormat("EEEE", new Locale("vi", "VN"));
     private static final DecimalFormat AMOUNT_FORMAT = new DecimalFormat("#,###,###");
 
-    // UI components
+    // Các thành phần UI
     private TextView tvGreeting, tvTotalAmount, tvNoTransactions, tvUserName;
     private TextView tvIncomeAmount, tvExpenseAmount;
     private ProgressBar progressIncome, progressExpense;
@@ -60,7 +63,7 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
     private FloatingActionButton fabAddTransaction, btnManageCategories;
     private BottomNavigationView bottomNavigation;
 
-    // Data
+    // Dữ liệu
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private final List<Transaction> transactions = new ArrayList<>();
@@ -120,7 +123,7 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         // Thiết lập bottom navigation
         bottomNavigation.setOnNavigationItemSelectedListener(this);
 
-        // Đảm bảo menu đã được inflate
+        // Đảm bảo menu đã được inflate và chọn tab hiện tại
         if (bottomNavigation.getMenu().findItem(R.id.thongke) != null) {
             bottomNavigation.setSelectedItemId(R.id.thongke);
         }
@@ -386,6 +389,7 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
         }
     }
 
+
     private void logout() {
         mAuth.signOut();
         if (getActivity() != null) {
@@ -493,9 +497,11 @@ public class ThongKe extends Fragment implements BottomNavigationView.OnNavigati
     }
 
     private class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        // Các loại view trong RecyclerView
         private static final int VIEW_TYPE_DATE_HEADER = 0;
         private static final int VIEW_TYPE_TRANSACTION = 1;
 
+        // Danh sách các item (Date hoặc Transaction)
         private final List<Object> items = new ArrayList<>();
 
         @Override
