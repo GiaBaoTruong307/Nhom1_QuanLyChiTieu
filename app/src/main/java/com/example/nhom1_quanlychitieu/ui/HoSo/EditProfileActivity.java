@@ -50,11 +50,10 @@ public class EditProfileActivity extends AppCompatActivity {
         if (!initFirebase()) {
             return;
         }
-
         initViews();
         loadUserData();
     }
-
+//khởi tạo firebase
     private boolean initFirebase() {
         try {
             FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -77,7 +76,7 @@ public class EditProfileActivity extends AppCompatActivity {
             return false;
         }
     }
-
+//ánh xạ giao diện
     private void initViews() {
         etFullName = findViewById(R.id.etFullName);
         etPhoneNumber = findViewById(R.id.etPhoneNumber);
@@ -92,7 +91,7 @@ public class EditProfileActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> saveUserProfile());
         btnBack.setOnClickListener(v -> onBackPressed());
     }
-
+//tair dữ liệu
     private void loadUserData() {
         progressDialog.setMessage("Đang tải...");
         progressDialog.show();

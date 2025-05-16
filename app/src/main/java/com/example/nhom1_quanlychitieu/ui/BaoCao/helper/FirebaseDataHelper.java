@@ -1,23 +1,24 @@
 package com.example.nhom1_quanlychitieu.ui.BaoCao.helper;
 
-import android.graphics.Color;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.example.nhom1_quanlychitieu.ui.BaoCao.model.CategoryData;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
+import com.example.nhom1_quanlychitieu.ui.ThongKe.model.Transaction;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -26,139 +27,200 @@ import java.util.Map;
 
 public class FirebaseDataHelper {
     private static final String TAG = "FirebaseDataHelper";
-    private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-    private final FirebaseFirestore db;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private final DatabaseReference db;
 
-    // Mảng màu sắc cho các danh mục
+    // Mảng màu cho các danh mục
     private static final int[] CATEGORY_COLORS = {
-            Color.parseColor("#4FC3F7"),  // Blue
-            Color.parseColor("#FFA726"),  // Orange
-            Color.parseColor("#9575CD"),  // Purple
-            Color.parseColor("#EC407A"),  // Pink
-            Color.parseColor("#66BB6A"),  // Green
-            Color.parseColor("#FFC107"),  // Yellow
-            Color.parseColor("#8D6E63"),  // Brown
-            Color.parseColor("#26A69A"),  // Teal
-            Color.parseColor("#EF5350"),  // Red
-            Color.parseColor("#7E57C2"),  // Deep Purple
-            Color.parseColor("#29B6F6"),  // Light Blue
-            Color.parseColor("#26C6DA"),  // Cyan
-            Color.parseColor("#9CCC65"),  // Light Green
-            Color.parseColor("#FFEE58"),  // Yellow
-            Color.parseColor("#FF7043"),  // Deep Orange
-            Color.parseColor("#78909C")   // Blue Grey
+            android.graphics.Color.rgb(255, 99, 132),
+            android.graphics.Color.rgb(54, 162, 235),
+            android.graphics.Color.rgb(255, 206, 86),
+            android.graphics.Color.rgb(75, 192, 192),
+            android.graphics.Color.rgb(153, 102, 255),
+            android.graphics.Color.rgb(255, 159, 64),
+            android.graphics.Color.rgb(255, 0, 0),
+            android.graphics.Color.rgb(0, 255, 0),
+            android.graphics.Color.rgb(0, 0, 255),
+            android.graphics.Color.rgb(128, 0, 128)
     };
 
+    // Constructor
     public FirebaseDataHelper() {
-        this.db = FirebaseFirestore.getInstance();
+        this.db = FirebaseDatabase.getInstance().getReference();
+        Log.d(TAG, "FirebaseDataHelper initialized with Realtime Database");
     }
 
-    // Lấy tổng chi tiêu theo khoảng thời gian
+    /**
+     * Định dạng số tiền thành chuỗi có dấu phẩy ngăn cách
+     */
+    public static String formatCurrency(long amount) {
+        DecimalFormat formatter = new DecimalFormat("#,###,### VND");
+        return formatter.format(amount);
+    }
+
+    /**
+     * Lấy tổng chi tiêu trong khoảng thời gian
+     */
     public void getTotalExpenseByDateRange(String startDate, String endDate, final OnTotalLoadedListener listener) {
         Log.d(TAG, "Fetching expenses from " + startDate + " to " + endDate);
 
-        db.collection("giaodich")
-                .whereEqualTo("loaigiaodich", "chi")
-                .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
+        try {
+            // Chuyển đổi chuỗi ngày thành timestamp
+            long startTimestamp = convertDateToTimestamp(startDate);
+            long endTimestamp = convertDateToTimestamp(endDate) + 86400000; // Cộng thêm 1 ngày (tính đến cuối ngày)
+
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onTotalLoaded(0);
+                return;
+            }
+
+            db.child("transactions").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             long total = 0;
                             int count = 0;
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                count++;
-                                if (document.contains("sotien")) {
-                                    Long amount = document.getLong("sotien");
-                                    if (amount != null) {
-                                        total += amount;
+
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                try {
+                                    Transaction transaction = snapshot.getValue(Transaction.class);
+                                    if (transaction != null && transaction.getAmount() < 0) { // Chi tiêu có amount < 0
+                                        long timestamp = transaction.getTimestamp();
+                                        if (timestamp >= startTimestamp && timestamp <= endTimestamp) {
+                                            total += Math.abs(transaction.getAmount());
+                                            count++;
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error parsing transaction: " + e.getMessage());
                                 }
                             }
+
                             Log.d(TAG, "Found " + count + " expense transactions, total: " + total);
                             listener.onTotalLoaded(total);
-                        } else {
-                            Log.w(TAG, "Error getting expense documents: ", task.getException());
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Error getting expense data: ", databaseError.toException());
                             listener.onTotalLoaded(0);
                         }
-                    }
-                });
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in getTotalExpenseByDateRange: " + e.getMessage());
+            listener.onTotalLoaded(0);
+        }
     }
 
-    // Lấy tổng thu nhập theo khoảng thời gian
+    /**
+     * Lấy tổng thu nhập trong khoảng thời gian
+     */
     public void getTotalIncomeByDateRange(String startDate, String endDate, final OnTotalLoadedListener listener) {
         Log.d(TAG, "Fetching income from " + startDate + " to " + endDate);
 
-        db.collection("giaodich")
-                .whereEqualTo("loaigiaodich", "thu")
-                .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
+        try {
+            // Chuyển đổi chuỗi ngày thành timestamp
+            long startTimestamp = convertDateToTimestamp(startDate);
+            long endTimestamp = convertDateToTimestamp(endDate) + 86400000; // Cộng thêm 1 ngày
+
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onTotalLoaded(0);
+                return;
+            }
+
+            db.child("transactions").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             long total = 0;
                             int count = 0;
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                count++;
-                                if (document.contains("sotien")) {
-                                    Long amount = document.getLong("sotien");
-                                    if (amount != null) {
-                                        total += amount;
+
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                try {
+                                    Transaction transaction = snapshot.getValue(Transaction.class);
+                                    if (transaction != null && transaction.getAmount() > 0) { // Thu nhập có amount > 0
+                                        long timestamp = transaction.getTimestamp();
+                                        if (timestamp >= startTimestamp && timestamp <= endTimestamp) {
+                                            total += transaction.getAmount();
+                                            count++;
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error parsing transaction: " + e.getMessage());
                                 }
                             }
+
                             Log.d(TAG, "Found " + count + " income transactions, total: " + total);
                             listener.onTotalLoaded(total);
-                        } else {
-                            Log.w(TAG, "Error getting income documents: ", task.getException());
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Error getting income data: ", databaseError.toException());
                             listener.onTotalLoaded(0);
                         }
-                    }
-                });
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in getTotalIncomeByDateRange: " + e.getMessage());
+            listener.onTotalLoaded(0);
+        }
     }
 
-    // Lấy danh sách chi tiêu theo khoảng thời gian
+    /**
+     * Lấy danh sách chi tiêu theo danh mục trong khoảng thời gian
+     */
     public void getExpenseByDateRange(String startDate, String endDate, final OnCategoriesLoadedListener listener) {
         Log.d(TAG, "Fetching expense categories from " + startDate + " to " + endDate);
 
-        db.collection("giaodich")
-                .whereEqualTo("loaigiaodich", "chi")
-                .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
+        try {
+            // Chuyển đổi chuỗi ngày thành timestamp
+            long startTimestamp = convertDateToTimestamp(startDate);
+            long endTimestamp = convertDateToTimestamp(endDate) + 86400000; // Cộng thêm 1 ngày
+
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onCategoriesLoaded(new ArrayList<>());
+                return;
+            }
+
+            db.child("transactions").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             Map<String, Long> categoryMap = new HashMap<>();
                             int count = 0;
 
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                count++;
-                                String categoryName = document.getString("tendanhmuc");
-                                Long amount = document.getLong("sotien");
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                try {
+                                    Transaction transaction = snapshot.getValue(Transaction.class);
+                                    if (transaction != null && transaction.getAmount() < 0) { // Chi tiêu có amount < 0
+                                        long timestamp = transaction.getTimestamp();
+                                        if (timestamp >= startTimestamp && timestamp <= endTimestamp) {
+                                            String categoryName = transaction.getCategory();
+                                            if (categoryName == null || categoryName.isEmpty()) {
+                                                categoryName = "Khác";
+                                            }
 
-                                Log.d(TAG, "Document ID: " + document.getId() +
-                                        ", Category: " + categoryName +
-                                        ", Amount: " + amount);
+                                            long amount = Math.abs(transaction.getAmount());
 
-                                if (categoryName != null && amount != null) {
-                                    if (categoryMap.containsKey(categoryName)) {
-                                        categoryMap.put(categoryName, categoryMap.get(categoryName) + amount);
-                                    } else {
-                                        categoryMap.put(categoryName, amount);
+                                            if (categoryMap.containsKey(categoryName)) {
+                                                categoryMap.put(categoryName, categoryMap.get(categoryName) + amount);
+                                            } else {
+                                                categoryMap.put(categoryName, amount);
+                                            }
+                                            count++;
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error parsing transaction: " + e.getMessage());
                                 }
                             }
 
                             Log.d(TAG, "Processed " + count + " expense documents, found " +
                                     categoryMap.size() + " unique categories");
 
+                            // Chuyển đổi Map thành List<CategoryData>
                             List<CategoryData> categoryDataList = new ArrayList<>();
                             int colorIndex = 0;
 
@@ -170,59 +232,78 @@ public class FirebaseDataHelper {
                             }
 
                             // Sắp xếp danh sách theo số tiền giảm dần
-                            Collections.sort(categoryDataList, new Comparator<CategoryData>() {
-                                @Override
-                                public int compare(CategoryData o1, CategoryData o2) {
-                                    return Long.compare(o2.getAmount(), o1.getAmount());
-                                }
-                            });
+                            Collections.sort(categoryDataList, (o1, o2) ->
+                                    Long.compare(o2.getAmount(), o1.getAmount()));
 
                             listener.onCategoriesLoaded(categoryDataList);
-                        } else {
-                            Log.w(TAG, "Error getting expense category documents: ", task.getException());
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Error getting expense category data: ", databaseError.toException());
                             listener.onCategoriesLoaded(new ArrayList<>());
                         }
-                    }
-                });
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in getExpenseByDateRange: " + e.getMessage());
+            listener.onCategoriesLoaded(new ArrayList<>());
+        }
     }
 
-    // Lấy danh sách thu nhập theo khoảng thời gian
+    /**
+     * Lấy danh sách thu nhập theo danh mục trong khoảng thời gian
+     */
     public void getIncomeByDateRange(String startDate, String endDate, final OnCategoriesLoadedListener listener) {
         Log.d(TAG, "Fetching income categories from " + startDate + " to " + endDate);
 
-        db.collection("giaodich")
-                .whereEqualTo("loaigiaodich", "thu")
-                .whereGreaterThanOrEqualTo("ngaygiaodich", startDate)
-                .whereLessThanOrEqualTo("ngaygiaodich", endDate)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
+        try {
+            // Chuyển đổi chuỗi ngày thành timestamp
+            long startTimestamp = convertDateToTimestamp(startDate);
+            long endTimestamp = convertDateToTimestamp(endDate) + 86400000; // Cộng thêm 1 ngày
+
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onCategoriesLoaded(new ArrayList<>());
+                return;
+            }
+
+            db.child("transactions").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             Map<String, Long> categoryMap = new HashMap<>();
                             int count = 0;
 
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                count++;
-                                String categoryName = document.getString("tendanhmuc");
-                                Long amount = document.getLong("sotien");
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                try {
+                                    Transaction transaction = snapshot.getValue(Transaction.class);
+                                    if (transaction != null && transaction.getAmount() > 0) { // Thu nhập có amount > 0
+                                        long timestamp = transaction.getTimestamp();
+                                        if (timestamp >= startTimestamp && timestamp <= endTimestamp) {
+                                            String categoryName = transaction.getCategory();
+                                            if (categoryName == null || categoryName.isEmpty()) {
+                                                categoryName = "Khác";
+                                            }
 
-                                Log.d(TAG, "Document ID: " + document.getId() +
-                                        ", Category: " + categoryName +
-                                        ", Amount: " + amount);
+                                            long amount = transaction.getAmount();
 
-                                if (categoryName != null && amount != null) {
-                                    if (categoryMap.containsKey(categoryName)) {
-                                        categoryMap.put(categoryName, categoryMap.get(categoryName) + amount);
-                                    } else {
-                                        categoryMap.put(categoryName, amount);
+                                            if (categoryMap.containsKey(categoryName)) {
+                                                categoryMap.put(categoryName, categoryMap.get(categoryName) + amount);
+                                            } else {
+                                                categoryMap.put(categoryName, amount);
+                                            }
+                                            count++;
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error parsing transaction: " + e.getMessage());
                                 }
                             }
 
                             Log.d(TAG, "Processed " + count + " income documents, found " +
                                     categoryMap.size() + " unique categories");
 
+                            // Chuyển đổi Map thành List<CategoryData>
                             List<CategoryData> categoryDataList = new ArrayList<>();
                             int colorIndex = 0;
 
@@ -234,46 +315,300 @@ public class FirebaseDataHelper {
                             }
 
                             // Sắp xếp danh sách theo số tiền giảm dần
-                            Collections.sort(categoryDataList, new Comparator<CategoryData>() {
-                                @Override
-                                public int compare(CategoryData o1, CategoryData o2) {
-                                    return Long.compare(o2.getAmount(), o1.getAmount());
-                                }
-                            });
+                            Collections.sort(categoryDataList, (o1, o2) ->
+                                    Long.compare(o2.getAmount(), o1.getAmount()));
 
                             listener.onCategoriesLoaded(categoryDataList);
-                        } else {
-                            Log.w(TAG, "Error getting income category documents: ", task.getException());
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Error getting income category data: ", databaseError.toException());
                             listener.onCategoriesLoaded(new ArrayList<>());
                         }
-                    }
-                });
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in getIncomeByDateRange: " + e.getMessage());
+            listener.onCategoriesLoaded(new ArrayList<>());
+        }
     }
 
-    // Lấy tháng hiện tại
-    public int getCurrentMonth() {
-        Calendar calendar = Calendar.getInstance();
-        return calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH bắt đầu từ 0
+    /**
+     * Lấy dữ liệu chi tiêu theo ngày trong khoảng thời gian
+     */
+    public void getExpenseByDayInRange(String startDate, String endDate, final OnDailyDataLoadedListener listener) {
+        Log.d(TAG, "Fetching daily expenses from " + startDate + " to " + endDate);
+
+        try {
+            // Chuyển đổi chuỗi ngày thành timestamp
+            long startTimestamp = convertDateToTimestamp(startDate);
+            long endTimestamp = convertDateToTimestamp(endDate) + 86400000; // Cộng thêm 1 ngày
+
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onDailyDataLoaded(new ArrayList<>(), new ArrayList<>());
+                return;
+            }
+
+            db.child("transactions").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            // Tạo map để lưu trữ tổng chi tiêu theo ngày
+                            Map<String, Long> dailyExpenseMap = new HashMap<>();
+
+                            // Tạo danh sách các ngày trong khoảng thời gian
+                            List<String> dateLabels = generateDateLabels(startDate, endDate);
+
+                            // Khởi tạo giá trị 0 cho tất cả các ngày
+                            for (String date : dateLabels) {
+                                dailyExpenseMap.put(date, 0L);
+                            }
+
+                            // Xử lý dữ liệu giao dịch
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                try {
+                                    Transaction transaction = snapshot.getValue(Transaction.class);
+                                    if (transaction != null && transaction.getAmount() < 0) { // Chi tiêu có amount < 0
+                                        long timestamp = transaction.getTimestamp();
+                                        if (timestamp >= startTimestamp && timestamp <= endTimestamp) {
+                                            // Chuyển timestamp thành chuỗi ngày
+                                            String dateStr = convertTimestampToDateString(timestamp);
+
+                                            // Cập nhật tổng chi tiêu cho ngày đó
+                                            if (dailyExpenseMap.containsKey(dateStr)) {
+                                                dailyExpenseMap.put(dateStr,
+                                                        dailyExpenseMap.get(dateStr) + Math.abs(transaction.getAmount()));
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error parsing transaction: " + e.getMessage());
+                                }
+                            }
+
+                            // Chuyển map thành danh sách giá trị theo thứ tự ngày
+                            List<Long> expenseValues = new ArrayList<>();
+                            for (String date : dateLabels) {
+                                expenseValues.add(dailyExpenseMap.get(date));
+                            }
+
+                            Log.d(TAG, "Processed daily expenses for " + dateLabels.size() + " days");
+                            listener.onDailyDataLoaded(dateLabels, expenseValues);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Error getting daily expense data: ", databaseError.toException());
+                            listener.onDailyDataLoaded(new ArrayList<>(), new ArrayList<>());
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in getExpenseByDayInRange: " + e.getMessage());
+            listener.onDailyDataLoaded(new ArrayList<>(), new ArrayList<>());
+        }
     }
 
-    // Lấy năm hiện tại
-    public int getCurrentYear() {
-        Calendar calendar = Calendar.getInstance();
-        return calendar.get(Calendar.YEAR);
+    /**
+     * Lấy dữ liệu thu nhập theo ngày trong khoảng thời gian
+     */
+    public void getIncomeByDayInRange(String startDate, String endDate, final OnDailyDataLoadedListener listener) {
+        Log.d(TAG, "Fetching daily income from " + startDate + " to " + endDate);
+
+        try {
+            // Chuyển đổi chuỗi ngày thành timestamp
+            long startTimestamp = convertDateToTimestamp(startDate);
+            long endTimestamp = convertDateToTimestamp(endDate) + 86400000; // Cộng thêm 1 ngày
+
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onDailyDataLoaded(new ArrayList<>(), new ArrayList<>());
+                return;
+            }
+
+            db.child("transactions").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            // Tạo map để lưu trữ tổng thu nhập theo ngày
+                            Map<String, Long> dailyIncomeMap = new HashMap<>();
+
+                            // Tạo danh sách các ngày trong khoảng thời gian
+                            List<String> dateLabels = generateDateLabels(startDate, endDate);
+
+                            // Khởi tạo giá trị 0 cho tất cả các ngày
+                            for (String date : dateLabels) {
+                                dailyIncomeMap.put(date, 0L);
+                            }
+
+                            // Xử lý dữ liệu giao dịch
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                try {
+                                    Transaction transaction = snapshot.getValue(Transaction.class);
+                                    if (transaction != null && transaction.getAmount() > 0) { // Thu nhập có amount > 0
+                                        long timestamp = transaction.getTimestamp();
+                                        if (timestamp >= startTimestamp && timestamp <= endTimestamp) {
+                                            // Chuyển timestamp thành chuỗi ngày
+                                            String dateStr = convertTimestampToDateString(timestamp);
+
+                                            // Cập nhật tổng thu nhập cho ngày đó
+                                            if (dailyIncomeMap.containsKey(dateStr)) {
+                                                dailyIncomeMap.put(dateStr,
+                                                        dailyIncomeMap.get(dateStr) + transaction.getAmount());
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error parsing transaction: " + e.getMessage());
+                                }
+                            }
+
+                            // Chuyển map thành danh sách giá trị theo thứ tự ngày
+                            List<Long> incomeValues = new ArrayList<>();
+                            for (String date : dateLabels) {
+                                incomeValues.add(dailyIncomeMap.get(date));
+                            }
+
+                            Log.d(TAG, "Processed daily income for " + dateLabels.size() + " days");
+                            listener.onDailyDataLoaded(dateLabels, incomeValues);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Error getting daily income data: ", databaseError.toException());
+                            listener.onDailyDataLoaded(new ArrayList<>(), new ArrayList<>());
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in getIncomeByDayInRange: " + e.getMessage());
+            listener.onDailyDataLoaded(new ArrayList<>(), new ArrayList<>());
+        }
     }
 
-    // Format số tiền thành chuỗi
-    public static String formatCurrency(long amount) {
-        return CURRENCY_FORMAT.format(amount) + " VND";
+    /**
+     * Kiểm tra kết nối Firebase
+     */
+    public void testFirebaseConnection(final OnConnectionTestListener listener) {
+        try {
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                listener.onConnectionTested(false, "Người dùng chưa đăng nhập");
+                return;
+            }
+
+            db.child("transactions").child(userId).limitToFirst(1)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            Log.d(TAG, "Firebase connection test: SUCCESS");
+                            Log.d(TAG, "Documents available: " + dataSnapshot.getChildrenCount());
+
+                            if (dataSnapshot.getChildrenCount() > 0) {
+                                DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
+                                Log.d(TAG, "Sample document: " + firstChild.getValue());
+                            }
+
+                            listener.onConnectionTested(true, null);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "Firebase connection test: FAILED", databaseError.toException());
+                            listener.onConnectionTested(false, databaseError.getMessage());
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in testFirebaseConnection: " + e.getMessage());
+            listener.onConnectionTested(false, e.getMessage());
+        }
     }
 
-    // Interface để callback khi tổng tiền được tải
+    /**
+     * Chuyển đổi chuỗi ngày thành timestamp
+     */
+    private long convertDateToTimestamp(String dateString) {
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = format.parse(dateString);
+            return date != null ? date.getTime() : 0;
+        } catch (ParseException e) {
+            Log.e(TAG, "Error parsing date: " + dateString, e);
+            return 0;
+        }
+    }
+
+    /**
+     * Chuyển đổi timestamp thành chuỗi ngày
+     */
+    private String convertTimestampToDateString(long timestamp) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return format.format(new Date(timestamp));
+    }
+
+    /**
+     * Tạo danh sách các ngày trong khoảng thời gian
+     */
+    private List<String> generateDateLabels(String startDate, String endDate) {
+        List<String> dateLabels = new ArrayList<>();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+        try {
+            Date start = format.parse(startDate);
+            Date end = format.parse(endDate);
+
+            if (start != null && end != null) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(start);
+
+                while (!calendar.getTime().after(end)) {
+                    dateLabels.add(format.format(calendar.getTime()));
+                    calendar.add(Calendar.DAY_OF_MONTH, 1);
+                }
+            }
+        } catch (ParseException e) {
+            Log.e(TAG, "Error generating date labels", e);
+        }
+
+        return dateLabels;
+    }
+
+    /**
+     * Lấy ID người dùng hiện tại
+     */
+    private String getCurrentUserId() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
+            return auth.getCurrentUser().getUid();
+        }
+        Log.e(TAG, "No user logged in");
+        return null;
+    }
+
+    /**
+     * Interface cho callback khi tải tổng số tiền
+     */
     public interface OnTotalLoadedListener {
         void onTotalLoaded(long total);
     }
 
-    // Interface để callback khi danh sách danh mục được tải
+    /**
+     * Interface cho callback khi tải danh sách danh mục
+     */
     public interface OnCategoriesLoadedListener {
         void onCategoriesLoaded(List<CategoryData> categories);
+    }
+
+    /**
+     * Interface cho callback khi tải dữ liệu theo ngày
+     */
+    public interface OnDailyDataLoadedListener {
+        void onDailyDataLoaded(List<String> dateLabels, List<Long> values);
+    }
+
+    /**
+     * Interface cho callback khi kiểm tra kết nối
+     */
+    public interface OnConnectionTestListener {
+        void onConnectionTested(boolean success, String errorMessage);
     }
 }

@@ -47,10 +47,11 @@
         android:layout_width="0dp"
         android:layout_height="2dp"
         android:background="@android:color/white"
-        app:layout_constraintEnd_toEndOf="@id/tabExpense"
-        app:layout_constraintStart_toStartOf="@id/tabExpense"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tabLayout"
-        tools:ignore="NotSibling" />
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintHorizontal_bias="0.0" />
 
     <View
         android:id="@+id/indicatorIncome"
@@ -58,10 +59,11 @@
         android:layout_height="2dp"
         android:background="@android:color/white"
         android:visibility="invisible"
-        app:layout_constraintEnd_toEndOf="@id/tabIncome"
-        app:layout_constraintStart_toStartOf="@id/tabIncome"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tabLayout"
-        tools:ignore="NotSibling" />
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintHorizontal_bias="1.0" />
 
     <!-- Fragment Container -->
     <FrameLayout

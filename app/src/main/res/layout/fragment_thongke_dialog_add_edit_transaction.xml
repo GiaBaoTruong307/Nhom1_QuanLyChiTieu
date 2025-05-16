@@ -92,7 +92,7 @@
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etAmount" />
-
+<!--spinner cung cấp một danh sách có sẵn-->
     <Spinner
         android:id="@+id/spinnerCategory"
         android:layout_width="0dp"

@@ -50,25 +50,27 @@ public class HoSo extends Fragment implements ProfileUpdateListener {
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private FirebaseUser currentUser;
-
+    //Gọi khi Fragment được tạo, trước khi giao diện được xây dựng.
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initFirebase();
     }
-
+//tạo và trả về giao diện
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_hoso, container, false);
     }
-
+//gọi ngay sau khi giao diện được tạo
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        //lấy tp giao diện
         initViews(view);
+        //thiết lập các sk
         setupListeners();
+        //tải data ng dùng
         loadUserData();
     }
 
@@ -111,7 +113,7 @@ public class HoSo extends Fragment implements ProfileUpdateListener {
             tvAppVersion.setText(getString(R.string.app_version_format, "1.0.0"));
         }
     }
-
+//Gắn các sự kiện tương tác vào các thành phần giao diện
     private void setupListeners() {
         btnLogout.setOnClickListener(v -> showLogoutConfirmationDialog());
         cardEditProfile.setOnClickListener(v -> navigateToEditProfile());
@@ -120,7 +122,7 @@ public class HoSo extends Fragment implements ProfileUpdateListener {
         switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) ->
                 updateNotificationPreference(isChecked));
     }
-
+//Tải và hiển thị thông tin người dùng từ Firebase.
     private void loadUserData() {
         if (currentUser == null) {
             navigateToLogin();
@@ -149,7 +151,7 @@ public class HoSo extends Fragment implements ProfileUpdateListener {
                     }
                 });
     }
-
+//Cập nhật giao diện với dữ liệu từ Firebase.
     private void updateUserDisplay(DataSnapshot dataSnapshot) {
         // Ưu tiên hiển thị Họ Tên nếu có
         String fullName = dataSnapshot.child(FULL_NAME_KEY).getValue(String.class);
