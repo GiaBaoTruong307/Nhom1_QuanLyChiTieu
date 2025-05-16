@@ -98,18 +98,27 @@
         android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@id/dateRangeButtons" />
 
+    <!-- Pie Chart -->
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChart"
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnApplyFilter" />
+
     <!-- Category Comparison Label -->
     <TextView
         android:id="@+id/labelCategoryComparison"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:text="So sánh các loại chi tiêu"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnApplyFilter" />
+        app:layout_constraintTop_toBottomOf="@id/pieChart" />
 
     <!-- Category List -->
     <ScrollView

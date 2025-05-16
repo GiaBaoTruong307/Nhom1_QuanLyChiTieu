@@ -1,37 +1,50 @@
 package com.example.nhom1_quanlychitieu.ui.BaoCao.model;
 
-import androidx.annotation.NonNull;
-
+/**
+ * Lớp dữ liệu cho danh mục trong báo cáo
+ */
 public class CategoryData {
-    private final String name;
-    private final long amount;
-    private final int color;
+    private String name;
+    private long amount;
+    private int color;
+    private float percentage;
 
     public CategoryData(String name, long amount, int color) {
         this.name = name;
         this.amount = amount;
         this.color = color;
+        this.percentage = 0;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public long getAmount() {
         return amount;
+    }
+
+    public void setAmount(long amount) {
+        this.amount = amount;
     }
 
     public int getColor() {
         return color;
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        return "CategoryData{" +
-                "name='" + name + '\'' +
-                ", amount=" + amount +
-                ", color=" + color +
-                '}';
+    public void setColor(int color) {
+        this.color = color;
+    }
+
+    public float getPercentage() {
+        return percentage;
+    }
+
+    public void setPercentage(float percentage) {
+        this.percentage = percentage;
     }
 }

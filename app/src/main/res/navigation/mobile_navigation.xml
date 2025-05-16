@@ -29,7 +29,7 @@
     <!-- Fragment Báo Cáo -->
     <fragment
         android:id="@+id/baocao"
-        android:name="com.example.nhom1_quanlychitieu.ui.BaoCao.BaoCao"
+        android:name="com.example.nhom1_quanlychitieu.ui.BaoCao.BaoCaoFragment"
         android:label="Báo Cáo"
         tools:layout="@layout/fragment_baocao" />
 
