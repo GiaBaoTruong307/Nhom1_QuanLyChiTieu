@@ -1,8 +1,8 @@
 package com.example.nhom1_quanlychitieu.ui.ThongKe.model;
 
 import java.io.Serializable;
-
 public class Wallet implements Serializable {
+    // Các thuộc tính của ví
     private String id;
     private String name;
     private long balance;
@@ -10,14 +10,13 @@ public class Wallet implements Serializable {
     private String currency;
     private boolean isDefault;
 
-    // Constructor mặc định cần thiết cho Firebase
     public Wallet() {
     }
 
     public Wallet(String name, long balance) {
         this.name = name;
         this.balance = balance;
-        this.currency = "VND";
+        this.currency = "VND";  // Mặc định là VND
         this.isDefault = false;
     }
 
@@ -25,11 +24,10 @@ public class Wallet implements Serializable {
         this.name = name;
         this.balance = balance;
         this.userId = userId;
-        this.currency = "VND";
+        this.currency = "VND";  // Mặc định là VND
         this.isDefault = false;
     }
 
-    // Getters và Setters
     public String getId() {
         return id;
     }

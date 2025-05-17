@@ -43,6 +43,7 @@ import java.util.Map;
 
 public class CategoryManagementActivity extends AppCompatActivity {
 
+    // Tag để sử dụng trong log
     private static final String TAG = "CategoryManagement";
 
     // Interface cho sự kiện chọn icon
@@ -50,14 +51,14 @@ public class CategoryManagementActivity extends AppCompatActivity {
         void onIconSelected(int position);
     }
 
-    // UI components
+    // Các thành phần UI
     private ImageButton btnBack;
     private Button btnAddCategory;
     private TextView tvNoCategories;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
 
-    // Data
+    // Dữ liệu
     private CategoryAdapter expenseAdapter;
     private CategoryAdapter incomeAdapter;
     private final List<Category> allCategories = new ArrayList<>();
@@ -65,9 +66,9 @@ public class CategoryManagementActivity extends AppCompatActivity {
     private final List<Category> incomeCategories = new ArrayList<>();
 
     // Firebase
-    private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
-    private String userId;
+    private FirebaseAuth mAuth; // Xác thực người dùng
+    private DatabaseReference mDatabase; // Tham chiếu đến database
+    private String userId; // ID của người dùng hiện tại
 
     // Mảng các icon mặc định cho chi tiêu
     private final int[] expenseIcons = {
@@ -112,12 +113,20 @@ public class CategoryManagementActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_thongke_category_management);
 
+        // Khởi tạo Firebase
         initFirebase();
-        if (userId == null) return;
+        if (userId == null) return; // Nếu không có người dùng, thoát
 
+        // Khởi tạo các thành phần UI
         initializeViews();
+
+        // Thiết lập TabLayout và ViewPager
         setupTabLayout();
+
+        // Thiết lập sự kiện
         setupEventListeners();
+
+        // Tải danh sách danh mục
         loadCategories();
     }
 
@@ -126,13 +135,16 @@ public class CategoryManagementActivity extends AppCompatActivity {
             mAuth = FirebaseAuth.getInstance();
             mDatabase = FirebaseDatabase.getInstance().getReference();
 
+            // Kiểm tra người dùng đã đăng nhập chưa
             if (mAuth.getCurrentUser() != null) {
                 userId = mAuth.getCurrentUser().getUid();
             } else {
+                // Nếu chưa đăng nhập, hiển thị thông báo và đóng Activity
                 Toast.makeText(this, "Vui lòng đăng nhập để quản lý danh mục", Toast.LENGTH_SHORT).show();
                 finish();
             }
         } catch (Exception e) {
+            // Xử lý lỗi khi khởi tạo Firebase
             Log.e(TAG, "Error initializing Firebase", e);
             Toast.makeText(this, "Lỗi khởi tạo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
@@ -160,17 +172,20 @@ public class CategoryManagementActivity extends AppCompatActivity {
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
                 case 0:
-                    tab.setText("Chi tiêu");
+                    tab.setText("Chi tiêu"); // Tab chi tiêu
                     break;
                 case 1:
-                    tab.setText("Thu nhập");
+                    tab.setText("Thu nhập"); // Tab thu nhập
                     break;
             }
         }).attach();
     }
 
     private void setupEventListeners() {
+        // Nút quay lại
         btnBack.setOnClickListener(v -> finish());
+
+        // Nút thêm danh mục mới
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
     }
 
@@ -196,9 +211,9 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
                             // Phân loại danh mục
                             if (category.isIncome()) {
-                                incomeCategories.add(category);
+                                incomeCategories.add(category); // Danh mục thu nhập
                             } else {
-                                expenseCategories.add(category);
+                                expenseCategories.add(category); // Danh mục chi tiêu
                             }
                         }
                     } catch (Exception e) {
@@ -221,10 +236,12 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (allCategories.isEmpty()) {
+            // Nếu không có danh mục, hiển thị thông báo
             tvNoCategories.setVisibility(View.VISIBLE);
             viewPager.setVisibility(View.GONE);
             tabLayout.setVisibility(View.GONE);
         } else {
+            // Nếu có danh mục, hiển thị danh sách
             tvNoCategories.setVisibility(View.GONE);
             viewPager.setVisibility(View.VISIBLE);
             tabLayout.setVisibility(View.VISIBLE);
@@ -271,9 +288,9 @@ public class CategoryManagementActivity extends AppCompatActivity {
         if (category != null) {
             etCategoryName.setText(category.getName());
             if (category.isIncome()) {
-                rbIncome.setChecked(true);
+                rbIncome.setChecked(true); // Thu nhập
             } else {
-                rbExpense.setChecked(true);
+                rbExpense.setChecked(true); // Chi tiêu
             }
         }
 
@@ -584,6 +601,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
                     cardView.setCardElevation(2f);
                     selectedOverlay.setVisibility(View.GONE);
                 }
+
 
                 itemView.setOnClickListener(v -> {
                     int position = getAdapterPosition();

@@ -51,40 +51,53 @@ import java.util.Map;
 
 public class TransactionManagementActivity extends AppCompatActivity {
 
+    // Tag để sử dụng trong log
     private static final String TAG = "TransactionManagement";
+
+    // Định dạng ngày tháng và số tiền
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
     private static final SimpleDateFormat DAY_OF_WEEK_FORMAT = new SimpleDateFormat("EEEE", new Locale("vi", "VN"));
     private static final DecimalFormat AMOUNT_FORMAT = new DecimalFormat("#,###,###");
 
-    // UI components
+    // Các thành phần UI
     private ImageButton btnBack;
     private RecyclerView rvTransactions;
     private Button btnAddTransaction;
     private TextView tvNoTransactions;
 
-    // Data
+    // Dữ liệu
     private TransactionAdapter adapter;
     private final List<Transaction> transactions = new ArrayList<>();
     private final List<Category> categories = new ArrayList<>();
     private final List<Wallet> wallets = new ArrayList<>();
 
     // Firebase
-    private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
-    private String userId;
+    private FirebaseAuth mAuth; // Xác thực người dùng
+    private DatabaseReference mDatabase; // Tham chiếu đến database
+    private String userId; // ID của người dùng hiện tại
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_thongke_transaction_management);
 
+        // Khởi tạo Firebase
         initFirebase();
-        if (userId == null) return;
+        if (userId == null) return; // Nếu không có người dùng, thoát
 
+        // Khởi tạo các thành phần UI
         initializeViews();
+
+        // Thiết lập RecyclerView
         setupRecyclerView();
+
+        // Thiết lập sự kiện
         setupEventListeners();
+
+        // Tải dữ liệu
         loadData();
+
+        // Xử lý khi mở Activity từ thông báo hoặc màn hình khác
         handleTransactionIdIntent();
     }
 
@@ -93,13 +106,16 @@ public class TransactionManagementActivity extends AppCompatActivity {
             mAuth = FirebaseAuth.getInstance();
             mDatabase = FirebaseDatabase.getInstance().getReference();
 
+            // Kiểm tra người dùng đã đăng nhập chưa
             if (mAuth.getCurrentUser() != null) {
                 userId = mAuth.getCurrentUser().getUid();
             } else {
+                // Nếu chưa đăng nhập, hiển thị thông báo và đóng Activity
                 Toast.makeText(this, "Vui lòng đăng nhập để quản lý giao dịch", Toast.LENGTH_SHORT).show();
                 finish();
             }
         } catch (Exception e) {
+            // Xử lý lỗi khi khởi tạo Firebase
             Log.e(TAG, "Error initializing Firebase", e);
             Toast.makeText(this, "Lỗi khởi tạo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
@@ -120,20 +136,24 @@ public class TransactionManagementActivity extends AppCompatActivity {
     }
 
     private void setupEventListeners() {
+        // Nút quay lại
         btnBack.setOnClickListener(v -> finish());
+
+        // Nút thêm giao dịch mới
         btnAddTransaction.setOnClickListener(v -> showAddTransactionDialog());
     }
 
     private void loadData() {
-        loadCategories();
-        loadWallets();
-        loadTransactions();
+        loadCategories(); // Tải danh sách danh mục
+        loadWallets(); // Tải danh sách ví
+        loadTransactions(); // Tải danh sách giao dịch
     }
 
     private void handleTransactionIdIntent() {
         String transactionId = getIntent().getStringExtra("transaction_id");
         if (transactionId == null) return;
 
+        // Tải thông tin giao dịch từ Firebase
         mDatabase.child("transactions").child(userId).child(transactionId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -141,7 +161,7 @@ public class TransactionManagementActivity extends AppCompatActivity {
                         Transaction transaction = dataSnapshot.getValue(Transaction.class);
                         if (transaction != null) {
                             transaction.setId(transactionId);
-                            showEditTransactionDialog(transaction);
+                            showEditTransactionDialog(transaction); // Hiển thị dialog chỉnh sửa
                         }
                     }
 
@@ -216,9 +236,11 @@ public class TransactionManagementActivity extends AppCompatActivity {
     private void createDefaultWallet() {
         if (userId == null) return;
 
+        // Tạo đối tượng ví mặc định
         Wallet defaultWallet = new Wallet("Ví của tôi", 0, userId);
         defaultWallet.setDefault(true);
 
+        // Lưu ví mặc định vào Firebase
         String walletId = mDatabase.child("wallets").child(userId).push().getKey();
         if (walletId != null) {
             mDatabase.child("wallets").child(userId).child(walletId).setValue(defaultWallet);
@@ -266,9 +288,11 @@ public class TransactionManagementActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (transactions.isEmpty()) {
+            // Nếu không có giao dịch, hiển thị thông báo
             tvNoTransactions.setVisibility(View.VISIBLE);
             rvTransactions.setVisibility(View.GONE);
         } else {
+            // Nếu có giao dịch, hiển thị danh sách
             tvNoTransactions.setVisibility(View.GONE);
             rvTransactions.setVisibility(View.VISIBLE);
             adapter.notifyDataSetChanged();
@@ -310,9 +334,9 @@ public class TransactionManagementActivity extends AppCompatActivity {
 
         // Hiển thị hoặc ẩn nút xóa tùy thuộc vào việc thêm mới hay chỉnh sửa
         if (transaction == null) {
-            btnDelete.setVisibility(View.GONE);
+            btnDelete.setVisibility(View.GONE); // Ẩn nút xóa khi thêm mới
         } else {
-            btnDelete.setVisibility(View.VISIBLE);
+            btnDelete.setVisibility(View.VISIBLE); // Hiển thị nút xóa khi chỉnh sửa
         }
 
         // Thiết lập tiêu đề dialog
@@ -322,16 +346,16 @@ public class TransactionManagementActivity extends AppCompatActivity {
         if (categories.isEmpty()) {
             Toast.makeText(this, "Vui lòng thêm danh mục trước khi thêm giao dịch", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
-            openCategoryManagement();
+            openCategoryManagement(); // Mở màn hình quản lý danh mục
             return;
         }
 
         // Thiết lập loại giao dịch nếu là chỉnh sửa
         if (transaction != null) {
             if (transaction.getAmount() > 0) {
-                rbIncome.setChecked(true);
+                rbIncome.setChecked(true); // Thu nhập
             } else {
-                rbExpense.setChecked(true);
+                rbExpense.setChecked(true); // Chi tiêu
             }
         }
 
@@ -499,9 +523,9 @@ public class TransactionManagementActivity extends AppCompatActivity {
         long amount = Long.parseLong(etAmount.getText().toString().trim());
         // Nếu là chi tiêu, đổi dấu số tiền
         if (isExpense) {
-            amount = -Math.abs(amount);
+            amount = -Math.abs(amount); // Số âm cho chi tiêu
         } else {
-            amount = Math.abs(amount);
+            amount = Math.abs(amount); // Số dương cho thu nhập
         }
 
         String categoryName = spinnerCategory.getSelectedItem().toString();
@@ -560,7 +584,7 @@ public class TransactionManagementActivity extends AppCompatActivity {
         mDatabase.child("transactions").child(userId).child(transactionId).setValue(transaction)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(TransactionManagementActivity.this, "Thêm giao dịch thành công", Toast.LENGTH_SHORT).show();
-                    updateWalletBalance(walletId, amount);
+                    updateWalletBalance(walletId, amount); // Cập nhật số dư ví
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(TransactionManagementActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
@@ -664,14 +688,11 @@ public class TransactionManagementActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Adapter cho RecyclerView hiển thị danh sách giao dịch
-     */
     private class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-        private static final int VIEW_TYPE_DATE_HEADER = 0;
-        private static final int VIEW_TYPE_TRANSACTION = 1;
+        private static final int VIEW_TYPE_DATE_HEADER = 0; // Loại view cho header ngày
+        private static final int VIEW_TYPE_TRANSACTION = 1; // Loại view cho giao dịch
 
-        private final List<Object> items = new ArrayList<>();
+        private final List<Object> items = new ArrayList<>(); // Danh sách các item (Date hoặc Transaction)
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
@@ -686,7 +707,7 @@ public class TransactionManagementActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            prepareItems();
+            prepareItems(); // Chuẩn bị dữ liệu trước khi đếm
             return items.size();
         }
 
@@ -709,9 +730,6 @@ public class TransactionManagementActivity extends AppCompatActivity {
             }
         }
 
-        /**
-         * Chuẩn bị dữ liệu cho adapter, nhóm giao dịch theo ngày
-         */
         private void prepareItems() {
             items.clear();
 
@@ -729,20 +747,17 @@ public class TransactionManagementActivity extends AppCompatActivity {
                     try {
                         Date date = DATE_FORMAT.parse(dateStr);
                         if (date != null) {
-                            items.add(date);
+                            items.add(date); // Thêm header ngày
                         }
                     } catch (ParseException e) {
                         Log.e(TAG, "Error parsing date", e);
                     }
                 }
 
-                items.add(transaction);
+                items.add(transaction); // Thêm giao dịch
             }
         }
 
-        /**
-         * ViewHolder cho header ngày
-         */
         class DateHeaderViewHolder extends RecyclerView.ViewHolder {
             TextView tvDate, tvDayOfWeek;
 
@@ -758,9 +773,6 @@ public class TransactionManagementActivity extends AppCompatActivity {
             }
         }
 
-        /**
-         * ViewHolder cho giao dịch
-         */
         class TransactionViewHolder extends RecyclerView.ViewHolder {
             ImageView imgCategory;
             TextView tvCategory, tvAmount, tvNote, tvWallet;
@@ -825,9 +837,6 @@ public class TransactionManagementActivity extends AppCompatActivity {
                 });
             }
 
-            /**
-             * Thiết lập icon cho danh mục
-             */
             private void setIconForCategory(ImageView imageView, String categoryName) {
                 // Tìm icon từ danh sách danh mục
                 for (Category category : categories) {
